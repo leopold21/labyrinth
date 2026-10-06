@@ -54,18 +54,16 @@ void display_labyrinth(int height, int width, int game[height][width]) {
         printf("\n");
     }
 }
-void initialize_game(int height, int width, int game[height][width]) {
+void initialize_game(int height, int width, int game[height][width], int start_col, int end_col, int start_line, int end_line) {
     // voir pour afficher quand cpt > 9, pour l'instant on affiche le nombre modulo 10
-    int start_col = rand() % width;
-    int end_col = rand() % width;
 
     int cpt = 0;
 
     for(int i = 0; i < height; i++) {
         for(int j = 0; j < width; j++) {
-            if(i == 0 && j == start_col) {
+            if(i == start_line && j == start_col) {
                 game[i][j] = 'o'; 
-            } else if(i == height - 1 && j == end_col) {
+            } else if(i == end_line && j == end_col) {
                 game[i][j] = '-'; 
             } else if (i%2 == 1 && j %2 == 1 && i < height - 1 && j < width - 1 ) {
                 game[i][j] = '0' + (cpt % 10);
@@ -81,10 +79,18 @@ void create_labyrinth() {
     int height = set_height();
     int game[height][width];
 
-    initialize_game(height, width, game);
+    int start_col = rand() % width;
+    int end_col = rand() % width;
+
+    int start_line = 0;
+    int end_line = height - 1;
+
+    initialize_game(height, width, game, start_col, end_col, start_line, end_line);
     
     display_labyrinth(height, width, game);
 }
+
+
 
 int main(int argc, char *argv[]) {
     create_labyrinth();
