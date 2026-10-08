@@ -1,0 +1,44 @@
+#ifndef LABYRINTH_H
+#define LABYRINTH_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Structures
+typedef struct {
+    int height;
+    int width;
+} Dimensions;
+
+typedef struct {
+    int start_line;
+    int start_col;
+    int end_line;
+    int end_col;
+} PathPoints;
+
+// Prototypes of the interface 
+void menu(void);
+Dimensions set_dimensions(void);
+void set_name(char *name);
+void display_labyrinth(Dimensions dim, int game[dim.height][dim.width]);
+void display_found_case(Dimensions dim, int **l);
+
+// Prototypes of the memory management functions
+int *allocate_vector(int dimension, int val);
+int **allocate_matrix(Dimensions dim, int val);
+void free_matrix(Dimensions dim, int **matrix);
+
+// Prototypes Labyrinth functions
+void initialize_game(Dimensions dim, int game[dim.height][dim.width], PathPoints points);
+void upper_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
+void lower_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
+void left_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
+void right_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
+int count_found_cases(Dimensions dim, int game[dim.height][dim.width]);
+void random_selection_case(Dimensions dim, int game[dim.height][dim.width]);
+void find_path(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
+void create_labyrinth(Dimensions dim);
+
+#endif
