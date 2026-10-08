@@ -85,10 +85,15 @@ void initialize_game(Dimensions dim, int game[dim.height][dim.width], PathPoints
             } else if (i == points.end_line && j == points.end_col) {
                 game[i][j] = '-'; 
             } else if (i % 2 == 1 && j % 2 == 1 && i < dim.height - 1 && j < dim.width - 1) {
-                game[i][j] = '0' + (cpt % 10);
+                if (cpt < 10) {
+                    game[i][j] = '0' + cpt; 
+                } else {
+                    game[i][j] = 'A' + (cpt - 10); 
+                }
                 cpt++;
-            } else {
-                game[i][j] = '#';
+            }
+            else {
+                game[i][j] = '#'; 
             }
         }
     }
@@ -143,7 +148,7 @@ int **allocate_matrix(Dimensions dim, int val) {
 
     for (int i = 0; i < dim.height; i++) {
         matrix[i] = allocate_vector(dim.width, val);
-        if (matrix[i] == NULL) return NULL; // Sécurité si un vecteur échoue
+        if (matrix[i] == NULL) return NULL;
     }
 
     return matrix;
@@ -169,29 +174,20 @@ int count_found_cases(Dimensions dim, int game[dim.height][dim.width]) {
     }
     return count;
 }
-
+/*
 int random_selection_case(Dimensions dim, int game[dim.height][dim.width], int *line, int *col) {
     int count = count_found_cases(dim, game);
     if (count == 0) return 0;
 
     int random_index = rand() % count;
-    int current_index = 0;
+    
 
     for (int i = 0; i < dim.height; i++) {
-        for (int j = 0; j < dim.width; j++) {
-            if (game[i][j] != '#' && game[i][j] != ' ' && 
-                game[i][j] != 'o' && game[i][j] != '-') {
-                if (current_index == random_index) {
-                    *line = i;
-                    *col = j;
-                    return 1;
-                }
-                current_index++;
-            }
+        for (int j = 0; j < dim.width; j++) 
+        {
         }
-    }
-    return 0;
 }
+        */
 
 void find_path(Dimensions dim, int game[dim.height][dim.width], PathPoints *points) {
     int **l = allocate_matrix(dim, -1);
