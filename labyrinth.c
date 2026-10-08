@@ -1,6 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
+// Structure pour la dimension du labyrinthe
+typedef struct {
+    int height;
+    int width;
+} Dimensions;
+
+// Structure pour les entrées et sorties du labyrinthe
+typedef struct {
+    int start_line;
+    int start_col;
+    int end_line;
+    int end_col;
+} PathPoints;
 
 void menu() {
     int choice;
@@ -11,147 +25,210 @@ void menu() {
     printf(" 4. Quitter\n");
     scanf("%d", &choice);
 
-    if(choice == 1) {
+    if (choice == 1) {
         // fonction pour créer un labyrinthe
-    } else if(choice == 2) {
+    } else if (choice == 2) {
        // fonction pour charger un labyrinthe
-    } else if(choice == 3) {
+    } else if (choice == 3) {
          // fonction pour jouer
-    } else if(choice == 4) {
+    } else if (choice == 4) {
        // fonction pour quitter
     } else {
         printf("Choix invalide. Veuillez réessayer.\n");
         menu();
     }
-
 }
 
-int set_height() {
-    int height;
-    printf("Entrez la hauteur du labyrinthe : ");
-    scanf("%d", &height);
-    return height;
+Dimensions set_dimensions() {
+    Dimensions dim;
+    
+    do {
+        printf("Entrez la hauteur du labyrinthe (impair et >= 3) : ");
+        scanf("%d", &dim.height);
+        if (dim.height < 3 || dim.height % 2 == 0) {
+            printf("Hauteur invalide. Doit être un nombre impair >= 3.\n");
+        }
+    } while (dim.height < 3 || dim.height % 2 == 0);
+
+    do {
+        printf("Entrez la largeur du labyrinthe (impair et >= 3) : ");
+        scanf("%d", &dim.width);
+        if (dim.width < 3 || dim.width % 2 == 0) {
+            printf("Largeur invalide. Doit être un nombre impair >= 3.\n");
+        }
+    } while (dim.width < 3 || dim.width % 2 == 0);
+
+    return dim;
 }
 
-int set_width() {
-    int width;
-    printf("Entrez la largeur du labyrinthe : ");
-    scanf("%d", &width);
-    return width;
-}
-
-
-void set_name(char * name) {
+void set_name(char *name) {
     printf("Entrez votre nom : ");
-    scanf("%49s", name); // 49s, car la taille du tableau est de 50, et on laisse une place pour le caractère nul
+    scanf("%49s", name);
 }
 
-void display_labyrinth(int height, int width, int game[height][width]) {
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
+void display_labyrinth(Dimensions dim, int game[dim.height][dim.width]) {
+    for (int i = 0; i < dim.height; i++) {
+        for (int j = 0; j < dim.width; j++) {
             printf("%c", game[i][j]);
         }
         printf("\n");
     }
 }
-void initialize_game(int height, int width, int game[height][width], int start_col, int end_col, int start_line, int end_line) {
-    // voir pour afficher quand cpt > 9, pour l'instant on affiche le nombre modulo 10
 
+void initialize_game(Dimensions dim, int game[dim.height][dim.width], PathPoints points) {
     int cpt = 0;
 
-    for(int i = 0; i < height; i++) {
-        for(int j = 0; j < width; j++) {
-            if(i == start_line && j == start_col) {
+    for (int i = 0; i < dim.height; i++) {
+        for (int j = 0; j < dim.width; j++) {
+            if (i == points.start_line && j == points.start_col) {
                 game[i][j] = 'o'; 
-            } else if(i == end_line && j == end_col) {
+            } else if (i == points.end_line && j == points.end_col) {
                 game[i][j] = '-'; 
-            } else if (i%2 == 1 && j %2 == 1 && i < height - 1 && j < width - 1 ) {
+            } else if (i % 2 == 1 && j % 2 == 1 && i < dim.height - 1 && j < dim.width - 1) {
                 game[i][j] = '0' + (cpt % 10);
                 cpt++;
-            }else {
+            } else {
                 game[i][j] = '#';
             }
         }
     }
 }
 
-void upperNeighbor(const int height, const int width, int game[height][width], int * start_line, const int * start_col) {
-    (*start_line)--;
-    game[*start_line][*start_col] = (int)' ';
-
+void upper_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points) {
+    points->start_line--;
+    game[points->start_line][points->start_col] = (int)' ';
 }
 
-void lowerNeighbor(const int height, const int width, int game[height][width], int * start_line, const int * start_col) {
-    (*start_line)++;
-    game[*start_line][*start_col] = (int)' ';
+void lower_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points) {
+    points->start_line++;
+    game[points->start_line][points->start_col] = (int)' ';
 }
 
-void leftNeighbor(const int height, const int width, int * game[height][width], const int * start_line, int * start_col) {
-    (*start_col)--;
-    game[*start_line][*start_col] = (int)' ';
+void left_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points) {
+    points->start_col--;
+    game[points->start_line][points->start_col] = (int)' ';
 }
 
-void rightNeighbor(const int height, const int width, int game[height][width], const int * start_line, int * start_col) {
-    (*start_col)++;
-    game[*start_line][*start_col] = (int)' ';
+void right_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points) {
+    points->start_col++;
+    game[points->start_line][points->start_col] = (int)' ';
 }
 
-void find_path(const int height, const int width, int game[height][width], int * start_col, int * end_col, int * start_line, int * end_line) {
-    while (start_line != end_line || start_col != end_col) {
-        int direction = rand() % 4; 
-        switch (direction) {
-            case 0: // Up
-                if ((*start_line > 0) && game[*start_line - 1][*start_col] != '#') {
-                    upperNeighbor(height, width, game, start_line, start_col);
-                }
-                break;
-            case 1: // Down
-                if ((*start_line < height - 1) && game[*start_line + 1][*start_col] != '#') {
-                    lowerNeighbor(height, width, game, start_line, start_col);
-                }
-                break;
-            case 2: // Left
-                if ((*start_col > 0) && game[*start_line][*start_col - 1] != '#') {
-                    leftNeighbor(height, width, game, start_line, start_col);
-                }
-                break;
-            case 3: // Right
-                if ((*start_col < width - 1) && game[*start_line][*start_col + 1] != '#') {
-                    rightNeighbor(height, width, game, start_line, start_col);
-                }
-                break;
+void display_found_case(Dimensions dim, int **l) {
+    printf("Cases trouvées :\n");
+    for (int i = 0; i < dim.height; i++) {
+        for (int j = 0; j < dim.width; j++) {
+            if (l[i][j] == -1) {
+                printf("# ");
+            } else {
+                printf("%c ", (char)l[i][j]);
+            }
         }
-        game[*start_line][*start_col] = (int)'*';
+        printf("\n");
     }
 }
 
-
-void create_labyrinth(int height, int width, int game[height][width]) {
-    srand(time(NULL)); 
-    int start_col = 1 + 2 * rand() % ((width - 1) / 2);
-    int end_col   = 1 + 2 * rand() % ((width - 1) / 2);
-
-    int start_line = 0;
-    int end_line = height - 1;
-    display_labyrinth(height, width, game);
-
-    printf("Start position: (%d, %d)\n", start_line, start_col);
-    initialize_game(height, width, game, start_col, end_col, start_line, end_line);
-    
-    display_labyrinth(height, width, game);
-
-    printf("end position: (%d, %d)\n", start_line, start_col);
-    find_path(height, width, game, start_col, end_col, start_line, end_line);
-
-    display_labyrinth(height, width, game);
+int *allocate_vector(int dimension, int val) {
+    int *vector = malloc(sizeof(int) * dimension);
+    if (vector == NULL) return NULL;
+    for (int i = 0; i < dimension; i++) {
+        vector[i] = val;
+    }
+    return vector;
 }
 
-int main(int argc, char *argv[]) 
-{
-    const int width = 11; // set_width();
-    const int height = 11; // set_height();
-    int game[11][11] = {{1}};
-    create_labyrinth(width, height, game);
+int **allocate_matrix(Dimensions dim, int val) {
+    int **matrix = malloc(sizeof(int *) * dim.height);
+    if (matrix == NULL) return NULL;
+
+    for (int i = 0; i < dim.height; i++) {
+        matrix[i] = allocate_vector(dim.width, val);
+        if (matrix[i] == NULL) return NULL; // Sécurité si un vecteur échoue
+    }
+
+    return matrix;
+}
+
+void free_matrix(Dimensions dim, int **matrix) {
+    if (matrix == NULL) return;
+    for (int i = 0; i < dim.height; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+}
+
+int count_found_cases(Dimensions dim, int game[dim.height][dim.width]) {
+    int count = 0;
+    for (int i = 0; i < dim.height; i++) {
+        for (int j = 0; j < dim.width; j++) {
+            if (game[i][j] != '#' && game[i][j] != ' ' && 
+                game[i][j] != 'o' && game[i][j] != '-') {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+int random_selection_case(Dimensions dim, int game[dim.height][dim.width], int *line, int *col) {
+    int count = count_found_cases(dim, game);
+    if (count == 0) return 0;
+
+    int random_index = rand() % count;
+    int current_index = 0;
+
+    for (int i = 0; i < dim.height; i++) {
+        for (int j = 0; j < dim.width; j++) {
+            if (game[i][j] != '#' && game[i][j] != ' ' && 
+                game[i][j] != 'o' && game[i][j] != '-') {
+                if (current_index == random_index) {
+                    *line = i;
+                    *col = j;
+                    return 1;
+                }
+                current_index++;
+            }
+        }
+    }
     return 0;
 }
 
+void find_path(Dimensions dim, int game[dim.height][dim.width], PathPoints *points) {
+    int **l = allocate_matrix(dim, -1);
+    if (l == NULL) return;
+
+    for (int i = 0; i < dim.height; i++) {
+        for (int j = 0; j < dim.width; j++) {
+            if (game[i][j] != '#' && game[i][j] != ' ' && 
+                game[i][j] != 'o' && game[i][j] != '-') {
+                l[i][j] = game[i][j];
+            } else {
+                l[i][j] = -1;      
+            }
+        }
+    }
+
+    display_found_case(dim, l);
+    free_matrix(dim, l);
+}
+
+void create_labyrinth(Dimensions dim) {
+    srand(time(NULL)); 
+    int game[dim.height][dim.width];
+
+    PathPoints points;
+    points.start_col = 1 + 2 * (rand() % ((dim.width - 1) / 2));
+    points.end_col   = 1 + 2 * (rand() % ((dim.width - 1) / 2));
+    points.start_line = 0;
+    points.end_line = dim.height - 1;
+
+    initialize_game(dim, game, points);
+    find_path(dim, game, &points);
+    display_labyrinth(dim, game);
+}
+
+int main(int argc, char *argv[]) {
+    Dimensions dim = set_dimensions();
+    create_labyrinth(dim);
+    return 0;
+}
