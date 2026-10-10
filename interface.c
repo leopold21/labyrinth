@@ -51,10 +51,23 @@ void set_name(char *name) {
     scanf("%49s", name);
 }
 
+
 void display_labyrinth(Dimensions dim, int game[dim.height][dim.width]) {
     for (int i = 0; i < dim.height; i++) {
         for (int j = 0; j < dim.width; j++) {
-            printf("%c", game[i][j]);
+            if (game[i][j] == WALL) {
+                printf("# "); 
+            } else if (game[i][j] == START) {
+                printf("o "); 
+            } else if (game[i][j] == END) {
+                printf("- "); 
+            } else if (game[i][j] >= 0 && game[i][j] <= 9) {
+                printf("%c ", '0' + game[i][j]); 
+            } else if (game[i][j] >= 10 && game[i][j] <= 35) {
+                printf("%c ", 'A' + (game[i][j] - 10)); 
+            } else {
+                printf(".  "); // A voir qu'est-ce qu'on fait
+            }
         }
         printf("\n");
     }

@@ -1,19 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Structure pour la dimension du labyrinthe
-typedef struct {
-    int height;
-    int width;
-} Dimensions;
-
-// Structure pour les entrées et sorties du labyrinthe
-typedef struct {
-    int start_line;
-    int start_col;
-    int end_line;
-    int end_col;
-} PathPoints;
+#include "labyrinth.h"
 
 int *allocate_vector(int dimension, int val) {
     int *vector = malloc(sizeof(int) * dimension);

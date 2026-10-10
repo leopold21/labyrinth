@@ -5,6 +5,13 @@
 #include <stdlib.h>
 #include <time.h>
 
+enum cases {
+    WALL = -1,
+    START = -2,
+    END = -3,
+    KEY = -4
+};
+
 // Structures
 typedef struct {
     int height;
@@ -17,6 +24,11 @@ typedef struct {
     int end_line;
     int end_col;
 } PathPoints;
+
+typedef struct {
+    int line;
+    int col;
+} Point;
 
 // Prototypes of the interface 
 void menu(void);
@@ -37,7 +49,7 @@ void lower_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints 
 void left_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
 void right_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
 int count_found_cases(Dimensions dim, int game[dim.height][dim.width]);
-void random_selection_case(Dimensions dim, int game[dim.height][dim.width]);
+Point random_selection_case(Dimensions dim, int game[dim.height][dim.width]);
 void find_path(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
 void create_labyrinth(Dimensions dim);
 
