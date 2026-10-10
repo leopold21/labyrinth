@@ -44,10 +44,10 @@ void free_matrix(Dimensions dim, int **matrix);
 
 // Prototypes Labyrinth functions
 void initialize_game(Dimensions dim, int game[dim.height][dim.width], PathPoints points);
-void upper_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
-void lower_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
-void left_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
-void right_neighbor(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
+Point upper_neighbor(Point point, Dimensions dim);
+Point lower_neighbor(Point point, Dimensions dim);
+Point left_neighbor(Point point, Dimensions dim);
+Point right_neighbor(Point point, Dimensions dim);
 int count_found_cases(Dimensions dim, int game[dim.height][dim.width]);
 Point random_selection_case(Dimensions dim, int game[dim.height][dim.width]);
 void find_path(Dimensions dim, int game[dim.height][dim.width], PathPoints *points);
