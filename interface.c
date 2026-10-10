@@ -66,7 +66,7 @@ void display_labyrinth(Dimensions dim, int game[dim.height][dim.width]) {
             } else if (game[i][j] >= 10 && game[i][j] <= 35) {
                 printf("%c ", 'A' + (game[i][j] - 10)); 
             } else {
-                printf(".  "); // A voir qu'est-ce qu'on fait
+                printf("%c", game[i][j]); // A voir qu'est-ce qu'on fait
             }
         }
         printf("\n");
