@@ -146,15 +146,12 @@ Point random_selection_case(Dimensions dim, int game[dim.height][dim.width]) {
 Point neighbor_already_found(Point point, Dimensions dim, int game[dim.height][dim.width]){
     int direction = rand()%4;
     Point point_neighbor_already_found = {-1};
-    printf("direction: %d\n", direction);
    
     switch (direction){
         case 0: // up
-            //printf("On monte, on a comme futur coordonnées: (%d,%d)\n", i - 1, j);
             if (game[point.line - 1][point.col] != START && game[point.line - 1][point.col] != END && game[point.line - 1][point.col] != WALL) {
                 point_neighbor_already_found.line = point.line - 1;
                 point_neighbor_already_found.col = point.col;
-                printf("line: %d et col: %d\n", point_neighbor_already_found.line, point_neighbor_already_found.col);
                 return point_neighbor_already_found;
             }
             else{
@@ -162,11 +159,9 @@ Point neighbor_already_found(Point point, Dimensions dim, int game[dim.height][d
             }
             break;
         case 1: // down
-            //printf("On monte, on a comme futur coordonnées: (%d,%d)\n", i + 1, j);
             if (game[point.line + 1][point.col] != START && game[point.line + 1][point.col] != END && game[point.line + 1][point.col] != WALL) {
                 point_neighbor_already_found.line = point.line + 1;
                 point_neighbor_already_found.col = point.col;
-                printf("line: %d et col: %d\n", point_neighbor_already_found.line, point_neighbor_already_found.col);
                 return point_neighbor_already_found;
             }
             else{
@@ -175,11 +170,9 @@ Point neighbor_already_found(Point point, Dimensions dim, int game[dim.height][d
             break;
             case 2: // left
                 if (point.col > 0) {
-                    //printf("On monte, on a comme futur coordonnées: (%d,%d)\n", i, j - 1);
                     if (game[point.line][point.col -1] != START && game[point.line][point.col - 1] != END && game[point.line][point.col - 1] != WALL) {
                         point_neighbor_already_found.line = point.line;
                         point_neighbor_already_found.col = point.col - 1;
-                        printf("line: %d et col: %d\n", point_neighbor_already_found.line, point_neighbor_already_found.col);
                         return point_neighbor_already_found;
 
                     }
@@ -189,11 +182,9 @@ Point neighbor_already_found(Point point, Dimensions dim, int game[dim.height][d
             }
             case 3: // right
                 if (point.col < dim.width - 1) {
-                    //printf("On monte, on a comme futur coordonnées: (%d,%d)\n", i, j + 1);
                     if (game[point.line][point.col -1] != START && game[point.line][point.col - 1] != END && game[point.line][point.col - 1] != WALL) {
                         point_neighbor_already_found.line = point.line;
                         point_neighbor_already_found.col = point.col + 1;
-                        printf("line: %d et col: %d\n", point_neighbor_already_found.line, point_neighbor_already_found.col);
                         return point_neighbor_already_found;                     
                    }
                 }
@@ -213,9 +204,7 @@ void generate_path(Dimensions dim, int game[dim.height][dim.width]) {
     Point neighbor;
     
     while (count>1) {
-        //printf("%d\n", count);
         wall = random_selection_case(dim, game);
-        //printf("line: %d, col: %d\n", wall.line, wall.col);
         neighbor = neighbor_already_found(wall, dim, game);
         /*if(neighbor.line < 0 || neighbor.col < 0){
             printf("il y a un problème\n"); // à revoir
