@@ -28,20 +28,20 @@ Dimensions set_dimensions() {
     Dimensions dim;
     
     do {
-        printf("Entrez la hauteur du labyrinthe (impair et >= 3) : ");
+        printf("Entrez la hauteur du labyrinthe (impair et >= 5) : ");
         scanf("%d", &dim.height);
-        if (dim.height < 3 || dim.height % 2 == 0) {
-            printf("Hauteur invalide. Doit être un nombre impair >= 3.\n");
+        if (dim.height < 5 || dim.height % 2 == 0) {
+            printf("Hauteur invalide. Doit être un nombre impair >= 5.\n");
         }
-    } while (dim.height < 3 || dim.height % 2 == 0);
+    } while (dim.height < 5 || dim.height % 2 == 0);
 
     do {
-        printf("Entrez la largeur du labyrinthe (impair et >= 3) : ");
+        printf("Entrez la largeur du labyrinthe (impair et >= 5) : ");
         scanf("%d", &dim.width);
-        if (dim.width < 3 || dim.width % 2 == 0) {
-            printf("Largeur invalide. Doit être un nombre impair >= 3.\n");
+        if (dim.width < 5 || dim.width % 2 == 0) {
+            printf("Largeur invalide. Doit être un nombre impair >= 5.\n");
         }
-    } while (dim.width < 3 || dim.width % 2 == 0);
+    } while (dim.width < 5 || dim.width % 2 == 0);
 
     return dim;
 }

@@ -65,6 +65,7 @@ Point random_selection_case(Dimensions dim, int game[dim.height][dim.width]) {
     Point wall = {-1, -1};
     int i, j;
 
+
     while (1) {
         i = 1 + rand() % (dim.height - 2); 
 
@@ -145,7 +146,7 @@ Point random_selection_case(Dimensions dim, int game[dim.height][dim.width]) {
 Point neighbor_already_found(Point point, Dimensions dim, int game[dim.height][dim.width]){
     int direction = rand()%4;
     Point point_neighbor_already_found = {-1};
-        printf("direction: %d\n", direction);
+    printf("direction: %d\n", direction);
    
     switch (direction){
         case 0: // up
@@ -157,7 +158,7 @@ Point neighbor_already_found(Point point, Dimensions dim, int game[dim.height][d
                 return point_neighbor_already_found;
             }
             else{
-                neighbor_already_found(point, dim, game);
+                return neighbor_already_found(point, dim, game);
             }
             break;
         case 1: // down
@@ -169,7 +170,7 @@ Point neighbor_already_found(Point point, Dimensions dim, int game[dim.height][d
                 return point_neighbor_already_found;
             }
             else{
-                neighbor_already_found(point, dim, game);
+                return neighbor_already_found(point, dim, game);
             }
             break;
             case 2: // left
@@ -180,10 +181,11 @@ Point neighbor_already_found(Point point, Dimensions dim, int game[dim.height][d
                         point_neighbor_already_found.col = point.col - 1;
                         printf("line: %d et col: %d\n", point_neighbor_already_found.line, point_neighbor_already_found.col);
                         return point_neighbor_already_found;
+
                     }
                 }
             else{
-                neighbor_already_found(point, dim, game);
+                return neighbor_already_found(point, dim, game);
             }
             case 3: // right
                 if (point.col < dim.width - 1) {
@@ -196,7 +198,7 @@ Point neighbor_already_found(Point point, Dimensions dim, int game[dim.height][d
                    }
                 }
             else{
-                neighbor_already_found(point, dim, game);
+                return neighbor_already_found(point, dim, game);
             }
             break;
     }
@@ -219,7 +221,7 @@ void generate_path(Dimensions dim, int game[dim.height][dim.width]) {
             printf("il y a un problème\n"); // à revoir
         }*/
          game[wall.line][wall.col] = game[neighbor.line][neighbor.col];
-         
+
         // gerer le wa ou wall n'est pas défini ?
         // casse le mur et fusionne les pieces
         count--;
