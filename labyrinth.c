@@ -125,7 +125,28 @@ void merge_components(Dimensions dim, int game[dim.height][dim.width], Point p1,
     }
 
 }
-    
+
+// a revoir, boucle infini
+bool is_generate_path(Dimensions dim, int game[dim.height][dim.width]){
+    Point point;
+    int number = -1;
+    for(int i = 0; i < dim.height; i++){
+        for(int j = 0; j < dim.width; j++){
+            point.line = i;
+            point.col = j;
+            if(is_walkable_cell(point, dim, game)){
+                if(number == -1){
+
+                    number = game[i][j];
+                }
+                else if(game[i][j] != number){
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
 
 
 void generate_path(Dimensions dim, int game[dim.height][dim.width]) {
@@ -133,7 +154,8 @@ void generate_path(Dimensions dim, int game[dim.height][dim.width]) {
     int walls_opened = 0;
     Point p1, p2, p3;
 
-    while (walls_opened < (((dim.height - 1) / 2) * ((dim.width - 1) / 2)) -1) { //voir pourquoi cette formule
+    //while (walls_opened < (((dim.height - 1) / 2) * ((dim.width - 1) / 2)) -1) { //voir pourquoi cette formule
+    while(!is_generate_path(dim,game)){
         wall = random_selection_case(dim, game);
         if (wall.line == -1 && wall.col == -1) {
             break; 
