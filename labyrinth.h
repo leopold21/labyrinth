@@ -35,7 +35,7 @@ typedef struct {
 void menu(void);
 Dimensions set_dimensions(void);
 void set_name(char *name);
-void display_labyrinth(Dimensions dim, int game[dim.height][dim.width]);
+void display_labyrinth(Dimensions dim, int **labyrinth);
 void display_found_case(Dimensions dim, int **l);
 
 // Prototypes of the memory management functions
@@ -44,19 +44,26 @@ int **allocate_matrix(Dimensions dim, int val);
 void free_matrix(Dimensions dim, int **matrix);
 
 // Prototypes Labyrinth functions
-void initialize_game(Dimensions dim, int game[dim.height][dim.width], PathPoints points);
-bool is_walkable_cell(Point point, Dimensions dim, int game[dim.height][dim.width]);
-bool is_upper_cell_walkable(Point point, Dimensions dim, int game[dim.height][dim.width]);
-bool is_lower_cell_walkable(Point point, Dimensions dim, int game[dim.height][dim.width]);
-bool is_left_cell_walkable(Point point, Dimensions dim, int game[dim.height][dim.width]);
-bool is_right_cell_walkable(Point point, Dimensions dim, int game[dim.height][dim.width]);
+void initialize_game(Dimensions dim, int **labyrinth, PathPoints points);
+int **allocate_labyrinth(Dimensions dim);
+void free_labyrinth(Dimensions dim, int **labyrinth);
+
+bool is_walkable_cell(Point point, Dimensions dim, int **labyrinth);
+bool is_upper_cell_walkable(Point point, Dimensions dim, int **labyrinth);
+bool is_lower_cell_walkable(Point point, Dimensions dim, int **labyrinth);
+bool is_left_cell_walkable(Point point, Dimensions dim, int **labyrinth);
+bool is_right_cell_walkable(Point point, Dimensions dim, int **labyrinth);
+
 Point upper_neighbor(Point point, Dimensions dim);
 Point lower_neighbor(Point point, Dimensions dim);
 Point left_neighbor(Point point, Dimensions dim);
 Point right_neighbor(Point point, Dimensions dim);
-Point random_selection_case(Dimensions dim, int game[dim.height][dim.width]);
-void merge_components(Dimensions dim, int game[dim.height][dim.width], Point p1, Point p2, Point p3);
-void generate_path(Dimensions dim, int game[dim.height][dim.width]);
-void create_labyrinth(Dimensions dim);
+
+Point random_selection_case(Dimensions dim, int **labyrinth);
+void merge_components(Dimensions dim, int **labyrinth, Point p1, Point p2, Point p3);
+bool is_generate_path(Dimensions dim, int **labyrinth);
+void generate_path(Dimensions dim, int **labyrinth);
+
+void create_labyrinth(Dimensions dim, int **labyrinth);
 
 #endif

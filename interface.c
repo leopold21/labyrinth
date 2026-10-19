@@ -12,7 +12,11 @@ void menu() {
 
     if (choice == 1) {
         Dimensions dim = set_dimensions();
-        create_labyrinth(dim);
+        int ** labyrinth = allocate_labyrinth(dim);
+        create_labyrinth(dim, labyrinth);
+
+        display_labyrinth(dim, labyrinth);
+        
     } else if (choice == 2) {
        // fonction pour charger un labyrinthe
     } else if (choice == 3) {
@@ -53,14 +57,14 @@ void set_name(char *name) {
 }
 
 
-void display_labyrinth(Dimensions dim, int game[dim.height][dim.width]) {
+void display_labyrinth(Dimensions dim, int ** labyrinth) {
     for (int i = 0; i < dim.height; i++) {
         for (int j = 0; j < dim.width; j++) {
-            if (game[i][j] == WALL) {
+            if (labyrinth[i][j] == WALL) {
                 printf("# "); 
-            } else if (game[i][j] == START) {
+            } else if (labyrinth[i][j] == START) {
                 printf("o "); 
-            } else if (game[i][j] == END) {
+            } else if (labyrinth[i][j] == END) {
                 printf("- "); 
             }  /* else if (game[i][j] >= 0 && game[i][j] <= 9) {
                 printf("%c ", '0' + game[i][j]); 
