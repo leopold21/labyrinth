@@ -11,7 +11,8 @@ void menu() {
     scanf("%d", &choice);
 
     if (choice == 1) {
-        // fonction pour créer un labyrinthe
+        Dimensions dim = set_dimensions();
+        create_labyrinth(dim);
     } else if (choice == 2) {
        // fonction pour charger un labyrinthe
     } else if (choice == 3) {
