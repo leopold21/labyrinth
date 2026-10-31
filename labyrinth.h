@@ -31,6 +31,14 @@ typedef struct {
     int col;
 } Point;
 
+typedef struct labyrinth
+{
+    Dimensions dim;
+    int **board;
+    PathPoints points;
+} Labyrinth;
+
+
 // Prototypes of the interface 
 void menu(void);
 Dimensions set_dimensions(void);
@@ -44,26 +52,26 @@ int **allocate_matrix(Dimensions dim, int val);
 void free_matrix(Dimensions dim, int **matrix);
 
 // Prototypes Labyrinth functions
-void initialize_game(Dimensions dim, int **labyrinth, PathPoints points);
+void initialize_game(Labyrinth labyrinth, PathPoints points);
 int **allocate_labyrinth(Dimensions dim);
-void free_labyrinth(Dimensions dim, int **labyrinth);
+void free_labyrinth(Labyrinth labyrinth);
 
-bool is_walkable_cell(Point point, Dimensions dim, int **labyrinth);
-bool is_upper_cell_walkable(Point point, Dimensions dim, int **labyrinth);
-bool is_lower_cell_walkable(Point point, Dimensions dim, int **labyrinth);
-bool is_left_cell_walkable(Point point, Dimensions dim, int **labyrinth);
-bool is_right_cell_walkable(Point point, Dimensions dim, int **labyrinth);
+bool is_walkable_cell(Point point, Labyrinth labyrinth);
+bool is_upper_cell_walkable(Point point, Labyrinth labyrinth);
+bool is_lower_cell_walkable(Point point, Labyrinth labyrinth);
+bool is_left_cell_walkable(Point point, Labyrinth labyrinth);
+bool is_right_cell_walkable(Point point, Labyrinth labyrinth);
 
 Point upper_neighbor(Point point, Dimensions dim);
 Point lower_neighbor(Point point, Dimensions dim);
 Point left_neighbor(Point point, Dimensions dim);
 Point right_neighbor(Point point, Dimensions dim);
 
-Point random_selection_case(Dimensions dim, int **labyrinth);
-void merge_components(Dimensions dim, int **labyrinth, Point p1, Point p2, Point p3);
-bool is_generate_path(Dimensions dim, int **labyrinth);
-void generate_path(Dimensions dim, int **labyrinth);
+Point random_selection_case(Labyrinth labyrinth);
+void merge_components(Labyrinth labyrinth, Point p1, Point p2, Point p3);
+bool is_generate_path(Labyrinth labyrinth);
+void generate_path(Labyrinth  labyrinth);
 
-void create_labyrinth(Dimensions dim, int **labyrinth);
+Labyrinth* create_labyrinth(Dimensions dim);
 
 #endif

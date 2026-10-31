@@ -8,15 +8,16 @@ void menu() {
     printf(" 2. Charger un labyrinthe\n");
     printf(" 3. Jouer\n");
     printf(" 4. Quitter\n");
+    printf("Faites votre choix: ");
     scanf("%d", &choice);
 
     if (choice == 1) {
         Dimensions dim = set_dimensions();
-        int ** labyrinth = allocate_labyrinth(dim);
-        create_labyrinth(dim, labyrinth);
-
-        display_labyrinth(dim, labyrinth);
-        
+        Labyrinth *labyrinth = create_labyrinth(dim);
+        if (labyrinth != NULL) {
+            free_labyrinth(*labyrinth);
+            free(labyrinth);
+        }
     } else if (choice == 2) {
        // fonction pour charger un labyrinthe
     } else if (choice == 3) {
@@ -94,4 +95,3 @@ void display_found_case(Dimensions dim, int **l) {
         printf("\n");
     }
 }
-

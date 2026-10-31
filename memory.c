@@ -20,7 +20,6 @@ int **allocate_matrix(Dimensions dim, int val) {
         matrix[i] = allocate_vector(dim.width, val);
         if (matrix[i] == NULL) return NULL;
     }
-
     return matrix;
 }
 
