@@ -152,9 +152,8 @@ void menu() {
 Dimensions set_dimensions() {
     Dimensions dim = {0, 0};
 
-    for (;;) {
-        if (!read_integer("Entrez la hauteur du labyrinthe (impair et >= 5) : ",
-                          &dim.height)) {
+    while(1) {
+        if (!read_integer("Entrez la hauteur du labyrinthe (impair et >= 5) : ", &dim.height)) { // permet au programme de ne pas planter si l'utilisateur entre un caractère non numérique par rapport à un scanf
             return dim;
         }
         if (dim.height < 5 || dim.height % 2 == 0) {
@@ -164,9 +163,8 @@ Dimensions set_dimensions() {
         break;
     }
 
-    for (;;) {
-        if (!read_integer("Entrez la largeur du labyrinthe (impair et >= 5) : ",
-                          &dim.width)) {
+    while(1){
+        if (!read_integer("Entrez la largeur du labyrinthe (impair et >= 5) : ", &dim.width)) { 
             dim.height = 0;
             return dim;
         }
@@ -194,13 +192,7 @@ void display_labyrinth(Dimensions dim, int ** labyrinth) {
                 printf("o "); 
             } else if (labyrinth[i][j] == END) {
                 printf("- "); 
-            }  /* else if (game[i][j] >= 0 && game[i][j] <= 9) {
-                printf("%c ", '0' + game[i][j]); 
-            } else if (game[i][j] >= 10 && game[i][j] <= 35) {
-                printf("%c ", 'A' + (game[i][j] - 10)); 
-            } else {
-                printf("%c", game[i][j]); // A voir qu'est-ce qu'on fait 
-            } */
+            }  
            else{
             printf("  ");
            }
