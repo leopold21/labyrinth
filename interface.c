@@ -151,13 +151,6 @@ void menu() {
                                 "Nom de fichier trop long.")) {
             return;
         }
-
-        /*size_t fileNameLength = strlen(labyrinthFile);
-        if (fileNameLength < 4 ||
-            strcmp(labyrinthFile + fileNameLength - 4, ".txt") != 0) {
-            strcat(labyrinthFile, ".txt");
-        }*/
-
         load_labyrinth(labyrinthFile);
         menu();
 
@@ -170,7 +163,7 @@ void menu() {
         
         display_labyrinth(dim, labyrinth->board);*/
     } else if (choice == 4) {
-       // fonction pour quitter
+       return;
     } else {
         printf("Choix invalide. Le choix doit être un nombre entier compris entre 1 et 4.\n\n");
         menu();
