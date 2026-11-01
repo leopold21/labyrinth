@@ -75,4 +75,5 @@ void generate_path(Labyrinth  labyrinth);
 Labyrinth* create_labyrinth(Dimensions dim);
 void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyrinth);
 void clear_buffer();
+void display_list_labyrinths();
 #endif

@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdbool.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
 #include "labyrinth.h"
 
@@ -242,8 +246,29 @@ Labyrinth* create_labyrinth(Dimensions dim) {
     return labyrinth;
 }
 
+void create_directory(char *path) {
+    char *sep = strrchr(path, '/');
+    if(sep != NULL) {
+        *sep = 0;
+        create_directory(path);
+        *sep = '/';
+    }
+    if(mkdir(path, 0777) && errno != EEXIST)
+        fprintf(stderr, "error while trying to create '%s'\n%m\n", path);
+}
+
 void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyrinth) {
-    FILE *file = fopen(fileName, "w");
+    const char *directory = "labyrinth";
+    int result = mkdir(directory, 0777);
+
+    if(result && errno != EEXIST)
+        fprintf(stderr, "error while trying to create '%s'\n%m\n", directory); 
+
+    
+    char filepath[256];
+    snprintf(filepath, sizeof(filepath), "labyrinth/%s", fileName);
+
+    FILE *file = fopen(filepath, "w");
 
     if (file == NULL) {
         perror("Erreur: impossible de créer le fichier");
@@ -272,4 +297,24 @@ void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyr
     printf("Le fichier \"%s\" est bien sauvegardé\n\n", fileName);
 
     menu();
+}
+
+void display_list_labyrinths() {
+    const char *directory = "labyrinth";
+    DIR *dir = opendir(directory);
+    struct dirent *entry;
+
+    if (dir == NULL) {
+        perror("Erreur: impossible d'ouvrir le répertoire");
+        return;
+    }
+
+    printf("Liste des labyrinthes disponibles :\n");
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] != '.') { // Ignore les fichiers cachés
+            printf("- %s\n", entry->d_name);
+        }
+    }
+    closedir(dir);
 }

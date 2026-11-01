@@ -109,6 +109,7 @@ void menu() {
         return;
     }
     if (choice == 1) {
+        // fonction pour créer un labyrinthe
         clear_buffer();
         Dimensions dim = set_dimensions();
         if (dim.height == 0) {
@@ -127,8 +128,7 @@ void menu() {
             }
 
             if (!read_required_line("Sous quel nom, voulez-vous sauvegarder le fichier: ",
-                                    nameFile, sizeof(nameFile) - 4,
-                                    "Nom de fichier trop long.")) {
+                                    nameFile, sizeof(nameFile) - 4, "Nom de fichier trop long.")) {
                 free_labyrinth(*labyrinth);
                 return;
             }
@@ -139,8 +139,17 @@ void menu() {
 
     } else if (choice == 2) {
        // fonction pour charger un labyrinthe
+       display_list_labyrinths();
+       
+
     } else if (choice == 3) {
          // fonction pour jouer
+      /*  Dimensions dim;
+       dim.height = 9;
+       dim.width = 9;
+       Labyrinth *labyrinth = create_labyrinth(dim);
+        
+        display_labyrinth(dim, labyrinth->board);*/
     } else if (choice == 4) {
        // fonction pour quitter
     } else {
