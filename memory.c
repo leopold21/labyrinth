@@ -18,11 +18,21 @@ int **allocate_matrix(Dimensions dim, int val) {
 
     for (int i = 0; i < dim.height; i++) {
         matrix[i] = allocate_vector(dim.width, val);
-        if (matrix[i] == NULL) return NULL;
+        if (matrix[i] == NULL) {
+            for (int j = 0; j < i; j++) {
+                free(matrix[j]);
+            }
+            free(matrix);
+            return NULL;
+        }
     }
     return matrix;
 }
 
+void clear_buffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF); 
+}
 void free_matrix(Dimensions dim, int **matrix) {
     if (matrix == NULL) return;
     for (int i = 0; i < dim.height; i++) {
@@ -30,4 +40,3 @@ void free_matrix(Dimensions dim, int **matrix) {
     }
     free(matrix);
 }
-

@@ -238,9 +238,38 @@ Labyrinth* create_labyrinth(Dimensions dim) {
 
     initialize_game(*labyrinth, points);
     generate_path(*labyrinth);
-    display_labyrinth(dim, labyrinth->board);
 
     return labyrinth;
 }
 
-void save_labirynth(Dimensions dim, int **La);
+void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyrinth) {
+    FILE *file = fopen(fileName, "w");
+
+    if (file == NULL) {
+        perror("Erreur: impossible de créer le fichier");
+        return;
+    }
+    
+    fprintf(file, "Le créateur du labyrinth est: %s\n\n", userName);
+
+    for (int i = 0; i < labyrinth->dim.height; i++) {
+        for (int j = 0; j < labyrinth->dim.width; j++) {
+            int cell = labyrinth->board[i][j];
+            if (cell == WALL) {
+                fputs("#", file);
+            } else if (cell == START) {
+                fputs("o", file);
+            } else if (cell == END) {
+                fputs("-", file);
+            } else {
+                fputs(" ", file);
+            }
+        }
+        fputc('\n', file);
+    }
+
+    fclose(file);
+    printf("Le fichier \"%s\" est bien sauvegardé\n\n", fileName);
+
+    menu();
+}
