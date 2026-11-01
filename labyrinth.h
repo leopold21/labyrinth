@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+#define LABYRINTH_DIRECTORY "labyrinths"
+
 enum cases {
     WALL = -1,
     START = -2,
@@ -75,5 +77,6 @@ void generate_path(Labyrinth  labyrinth);
 Labyrinth* create_labyrinth(Dimensions dim);
 void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyrinth);
 void clear_buffer();
-void display_list_labyrinths();
+int display_list_labyrinths();
+void load_labyrinth(const char *fileName);
 #endif

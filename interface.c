@@ -95,6 +95,7 @@ static int read_integer(const char *prompt, int *value) {
 
 void menu() {
     int choice ;
+    printf("---------- Bienvenue dans le jeu du labyrinthe ! ----------\n");
     printf(" Voulez-vous :\n");
     printf(" 1. Créer un labyrinthe\n");
     printf(" 2. Charger un labyrinthe\n");
@@ -138,9 +139,27 @@ void menu() {
         }
 
     } else if (choice == 2) {
-       // fonction pour charger un labyrinthe
-       display_list_labyrinths();
-       
+        char labyrinthFile[200];
+
+        if (display_list_labyrinths() == -1) {
+            menu();
+            return;
+        }
+        clear_buffer();
+        if (!read_required_line("Entrez le nom du fichier à charger : ",
+                                labyrinthFile, sizeof(labyrinthFile) - 4,
+                                "Nom de fichier trop long.")) {
+            return;
+        }
+
+        /*size_t fileNameLength = strlen(labyrinthFile);
+        if (fileNameLength < 4 ||
+            strcmp(labyrinthFile + fileNameLength - 4, ".txt") != 0) {
+            strcat(labyrinthFile, ".txt");
+        }*/
+
+        load_labyrinth(labyrinthFile);
+        menu();
 
     } else if (choice == 3) {
          // fonction pour jouer

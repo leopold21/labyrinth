@@ -258,15 +258,13 @@ void create_directory(char *path) {
 }
 
 void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyrinth) {
-    const char *directory = "labyrinth";
-    int result = mkdir(directory, 0777);
+    int result = mkdir(LABYRINTH_DIRECTORY, 0777);
 
     if(result && errno != EEXIST)
-        fprintf(stderr, "error while trying to create '%s'\n%m\n", directory); 
+        fprintf(stderr, "error while trying to create '%s'\n%m\n", LABYRINTH_DIRECTORY);
 
-    
     char filepath[256];
-    snprintf(filepath, sizeof(filepath), "labyrinth/%s", fileName);
+    snprintf(filepath, sizeof(filepath), "%s/%s", LABYRINTH_DIRECTORY, fileName);
 
     FILE *file = fopen(filepath, "w");
 
@@ -299,14 +297,14 @@ void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyr
     menu();
 }
 
-void display_list_labyrinths() {
-    const char *directory = "labyrinth";
+int display_list_labyrinths() {
+    const char *directory = LABYRINTH_DIRECTORY;
     DIR *dir = opendir(directory);
     struct dirent *entry;
 
     if (dir == NULL) {
-        perror("Erreur: impossible d'ouvrir le répertoire");
-        return;
+        printf("Aucun labyrinthe créé, veuillez en créer un.\n");
+        return -1;
     }
 
     printf("Liste des labyrinthes disponibles :\n");
@@ -317,4 +315,33 @@ void display_list_labyrinths() {
         }
     }
     closedir(dir);
+    return 0;
+}
+
+int end_by_txt(const char *fileName) {
+    size_t len = strlen(fileName);
+    return (len >= 4 && strcmp(fileName + len - 4, ".txt") == 0);
+}
+
+void load_labyrinth(const char *fileName) {
+    const char *directory = LABYRINTH_DIRECTORY;
+    char filePath[256];
+    if(end_by_txt(fileName)) {
+        snprintf(filePath, sizeof(filePath), "%s/%s", directory, fileName);
+    } else {
+        snprintf(filePath, sizeof(filePath), "%s/%s.txt", directory, fileName);
+    }
+
+    FILE *file = fopen(filePath, "r");
+    if (file == NULL) {
+        printf("Le fichier \"%s\" n'existe pas.\n", fileName);
+        return;
+    }
+
+    char line[256];
+    while (fgets(line, sizeof(line), file)) {
+        printf("%s", line);
+    }
+
+    fclose(file);
 }
