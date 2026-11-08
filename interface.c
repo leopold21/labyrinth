@@ -93,6 +93,23 @@ static int read_integer(const char *prompt, int *value) {
     }
 }
 
+static int load_labyrinth_interactively(Labyrinth *labyrinth) {
+    char fileName[200];
+
+    if (display_list_labyrinths() == -1) {
+        return 0;
+    }
+
+    clear_buffer();
+    if (!read_required_line("Entrez le nom du fichier à charger : ",
+                            fileName, sizeof(fileName) - 4,
+                            "Nom de fichier trop long.")) {
+        return -1;
+    }
+
+    return load_labyrinth(fileName, labyrinth);
+}
+
 void menu() {
     int choice ;
     printf("---------- Bienvenue dans le jeu du labyrinthe ! ----------\n");
@@ -110,7 +127,7 @@ void menu() {
         return;
     }
     if (choice == 1) {
-        // fonction pour créer un labyrinthe
+        // Créer un labyrinthe
         clear_buffer();
         Dimensions dim = set_dimensions();
         if (dim.height == 0) {
@@ -139,30 +156,84 @@ void menu() {
         }
 
     } else if (choice == 2) {
-        char labyrinthFile[200];
-
-        if (display_list_labyrinths() == -1) {
-            menu();
+        // Charger un labyrinthe
+        Labyrinth labyrinth = {0};
+        int result = load_labyrinth_interactively(&labyrinth);
+        if (result == -1) {
             return;
         }
-        clear_buffer();
-        if (!read_required_line("Entrez le nom du fichier à charger : ",
-                                labyrinthFile, sizeof(labyrinthFile) - 4,
-                                "Nom de fichier trop long.")) {
-            return;
+        if (result == 1) {
+            display_labyrinth(labyrinth.dim, labyrinth.board);
+            free_labyrinth(labyrinth);
         }
-        load_labyrinth(labyrinthFile);
         menu();
 
     } else if (choice == 3) {
-         // fonction pour jouer
-      /*  Dimensions dim;
-       dim.height = 9;
-       dim.width = 9;
-       Labyrinth *labyrinth = create_labyrinth(dim);
-        
-        display_labyrinth(dim, labyrinth->board);*/
+        // Jouer
+        Labyrinth labyrinth = {0};
+        int result = load_labyrinth_interactively(&labyrinth);
+        if (result == -1) {
+            return;
+        }
+        if (result == 0) {
+            menu();
+            return;
+        }
+
+        printf("----------------------Jeu du labyrinthe----------------------\n");
+        printf("Vous êtes représenté par le caractère 'o' et vous devez atteindre le caractère '-' pour gagner.\n");
+        printf("Vous pouvez vous déplacer en utilisant les touches 'z' (haut), 's' (bas), 'q' (gauche) et 'd' (droite).\n");
+        printf("Bonne chance !\n\n");
+
+        Point current_point = {labyrinth.points.start_line, labyrinth.points.start_col};
+        Point end_point = {labyrinth.points.end_line, labyrinth.points.end_col};
+        int nb_moves = 0;
+
+        while (current_point.line != end_point.line || current_point.col != end_point.col) {
+            nb_moves++;
+            display_labyrinth(labyrinth.dim, labyrinth.board);
+            printf("Entrez votre mouvement (z(haut) /s(bas) /q(gauche) /d(droite) )) : ");
+            char move;
+            if (scanf(" %c", &move) != 1) {
+                printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
+                free_labyrinth(labyrinth);
+                return;
+            }
+
+            Point next_point = current_point;
+            if (move == 'z') {
+                next_point = upper_neighbor(current_point, labyrinth.dim);
+            } else if (move == 's') {
+                next_point = lower_neighbor(current_point, labyrinth.dim);
+            } else if (move == 'q') {
+                next_point = left_neighbor(current_point, labyrinth.dim);
+            } else if (move == 'd') {
+                next_point = right_neighbor(current_point, labyrinth.dim);
+            } else {
+                printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
+                continue;
+            }
+
+            if (next_point.line >= 0 && next_point.line < labyrinth.dim.height &&
+                next_point.col >= 0 && next_point.col < labyrinth.dim.width &&
+                labyrinth.board[next_point.line][next_point.col] != WALL) {
+                labyrinth.board[current_point.line][current_point.col] = 0;
+                current_point = next_point;
+                if (current_point.line != end_point.line ||
+                    current_point.col != end_point.col) {
+                    labyrinth.board[current_point.line][current_point.col] = START;
+                }
+            } else {
+                printf("Mouvement invalide. Vous ne pouvez pas vous déplacer dans cette direction.\n");
+            }
+        }
+
+        printf("Bravo, vous avez trouvé la sortie en %d coup(s)!\n", nb_moves);
+        free_labyrinth(labyrinth);
+        menu();
     } else if (choice == 4) {
+        // Quitter
+        printf("Merci d'avoir joué ! À bientôt !\n");
        return;
     } else {
         printf("Choix invalide. Le choix doit être un nombre entier compris entre 1 et 4.\n\n");

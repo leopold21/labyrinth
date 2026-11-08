@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <string.h>
+#include <limits.h>
 #include <sys/stat.h>
 #include <dirent.h>
 
@@ -323,9 +324,14 @@ int end_by_txt(const char *fileName) {
     return (len >= 4 && strcmp(fileName + len - 4, ".txt") == 0);
 }
 
-void load_labyrinth(const char *fileName) {
+int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
     const char *directory = LABYRINTH_DIRECTORY;
     char filePath[256];
+    if (fileName == NULL || labyrinth == NULL) {
+        fprintf(stderr, "Nom de fichier ou labyrinthe invalide.\n");
+        return 0;
+    }
+
     if(end_by_txt(fileName)) {
         snprintf(filePath, sizeof(filePath), "%s/%s", directory, fileName);
     } else {
@@ -335,13 +341,120 @@ void load_labyrinth(const char *fileName) {
     FILE *file = fopen(filePath, "r");
     if (file == NULL) {
         printf("Le fichier \"%s\" n'existe pas.\n", fileName);
-        return;
+        return 0;
     }
 
-    char line[256];
-    while (fgets(line, sizeof(line), file)) {
-        printf("%s", line);
+    char *line = NULL;
+    size_t capacity = 0;
+    ssize_t length;
+    int height = 0;
+    int width = 0;
+    int start_count = 0;
+    int end_count = 0;
+    int valid = 1;
+
+    if (getline(&line, &capacity, file) == -1) {
+        valid = 0;
     }
 
+    while (valid && (length = getline(&line, &capacity, file)) != -1) {
+        while (length > 0 && (line[length - 1] == '\n' || line[length - 1] == '\r')) {
+            line[--length] = '\0';
+        }
+        if (length == 0) {
+            continue;
+        }
+
+        if (length > INT_MAX || (width != 0 && width != length) || height == INT_MAX) {
+            valid = 0;
+            break;
+        }
+        if (width == 0) {
+            width = (int)length;
+        }
+
+        for (ssize_t col = 0; col < length; col++) {
+            if (line[col] == 'o') {
+                start_count++;
+            } else if (line[col] == '-') {
+                end_count++;
+            } else if (line[col] != '#' && line[col] != ' ') {
+                valid = 0;
+                break;
+            }
+        }
+        if (!valid) {
+            break;
+        }
+        height++;
+    }
+
+    if (ferror(file) || height == 0 || width == 0 ||
+        start_count != 1 || end_count != 1) {
+        valid = 0;
+    }
+
+    Labyrinth loaded = {0};
+    if (valid) {
+        loaded.dim.height = height;
+        loaded.dim.width = width;
+        loaded.board = allocate_labyrinth(loaded.dim);
+        if (loaded.board == NULL) {
+            valid = 0;
+        }
+    }
+
+    if (valid) {
+        rewind(file);
+        if (getline(&line, &capacity, file) == -1) {
+            valid = 0;
+        }
+        int row = 0;
+        while (valid && (length = getline(&line, &capacity, file)) != -1) {
+            while (length > 0 && (line[length - 1] == '\n' || line[length - 1] == '\r')) {
+                line[--length] = '\0';
+            }
+            if (length == 0) {
+                continue;
+            }
+
+            for (int col = 0; col < width; col++) {
+                switch (line[col]) {
+                    case '#':
+                        loaded.board[row][col] = WALL;
+                        break;
+                    case 'o':
+                        loaded.board[row][col] = START;
+                        loaded.points.start_line = row;
+                        loaded.points.start_col = col;
+                        break;
+                    case '-':
+                        loaded.board[row][col] = END;
+                        loaded.points.end_line = row;
+                        loaded.points.end_col = col;
+                        break;
+                    default:
+                        loaded.board[row][col] = 0;
+                        break;
+                }
+            }
+            row++;
+        }
+        if (valid && row == height) {
+            *labyrinth = loaded;
+        } else {
+            valid = 0;
+        }
+    }
+
+    if (!valid) {
+        if (loaded.board != NULL) {
+            free_labyrinth(loaded);
+        }
+        fprintf(stderr, "Le fichier \"%s\" ne contient pas un labyrinthe valide.\n", fileName);
+    }
+
+    free(line);
     fclose(file);
+    return valid;
 }
