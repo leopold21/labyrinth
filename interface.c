@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "labyrinth.h"
 
@@ -170,8 +171,8 @@ void menu() {
 
     } else if (choice == 3) {
         // Jouer
-        Labyrinth labyrinth = {0};
-        int result = load_labyrinth_interactively(&labyrinth);
+        Game game = {0};
+        int result = load_labyrinth_interactively(&game.labyrinth);
         if (result == -1) {
             return;
         }
@@ -181,55 +182,75 @@ void menu() {
         }
 
         printf("----------------------Jeu du labyrinthe----------------------\n");
-        printf("Vous êtes représenté par le caractère 'o' et vous devez atteindre le caractère '-' pour gagner.\n");
+        printf("Vous êtes représenté par 'o'. Ramassez la clé (K) pour ouvrir la sortie (-).\n");
+        printf("Un bonus (B) ajoute 1 point ; un malus (M) retire 1 point.\n");
         printf("Vous pouvez vous déplacer en utilisant les touches 'z' (haut), 's' (bas), 'q' (gauche) et 'd' (droite).\n");
         printf("Bonne chance !\n\n");
 
-        Point current_point = {labyrinth.points.start_line, labyrinth.points.start_col};
-        Point end_point = {labyrinth.points.end_line, labyrinth.points.end_col};
-        int nb_moves = 0;
+        Point current_point = {game.labyrinth.points.start_line, game.labyrinth.points.start_col};
+        Point end_point = {game.labyrinth.points.end_line, game.labyrinth.points.end_col};
 
         while (current_point.line != end_point.line || current_point.col != end_point.col) {
-            nb_moves++;
-            display_labyrinth(labyrinth.dim, labyrinth.board);
-            printf("Entrez votre mouvement (z(haut) /s(bas) /q(gauche) /d(droite) )) : ");
+            display_labyrinth(game.labyrinth.dim, game.labyrinth.board);
+            printf("Score (bonus/malus): %d | Coups : %d | Clé : %s\n",
+                   game.score, game.nb_moves, game.is_key_found ? "oui" : "non");
+            printf("Entrez votre mouvement (z : haut, s : bas, q : gauche, d : droite) : ");
             char move;
             if (scanf(" %c", &move) != 1) {
                 printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
-                free_labyrinth(labyrinth);
+                free_labyrinth(game.labyrinth);
                 return;
             }
 
             Point next_point = current_point;
             if (move == 'z') {
-                next_point = upper_neighbor(current_point, labyrinth.dim);
+                next_point = upper_neighbor(current_point, game.labyrinth.dim);
             } else if (move == 's') {
-                next_point = lower_neighbor(current_point, labyrinth.dim);
+                next_point = lower_neighbor(current_point, game.labyrinth.dim);
             } else if (move == 'q') {
-                next_point = left_neighbor(current_point, labyrinth.dim);
+                next_point = left_neighbor(current_point, game.labyrinth.dim);
             } else if (move == 'd') {
-                next_point = right_neighbor(current_point, labyrinth.dim);
+                next_point = right_neighbor(current_point, game.labyrinth.dim);
             } else {
                 printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
                 continue;
             }
 
-            if (next_point.line >= 0 && next_point.line < labyrinth.dim.height &&
-                next_point.col >= 0 && next_point.col < labyrinth.dim.width &&
-                labyrinth.board[next_point.line][next_point.col] != WALL) {
-                labyrinth.board[current_point.line][current_point.col] = 0;
+            if (next_point.line >= 0 && next_point.line < game.labyrinth.dim.height &&
+                next_point.col >= 0 && next_point.col < game.labyrinth.dim.width) {
+                int next_cell = game.labyrinth.board[next_point.line][next_point.col];
+                if (next_cell == WALL) {
+                    printf("Mouvement invalide. Vous ne pouvez pas traverser un mur.\n");
+                    continue;
+                }
+                if (next_cell == END && !game.is_key_found) {
+                    printf("La sortie est verrouillée. Trouvez d'abord la clé (K).\n");
+                    continue;
+                }
+
+                if (next_cell == KEY) {
+                    game.is_key_found = true;
+                } else if (next_cell == BONUS) {
+                    game.score += SCORE_BONUS;
+                } else if (next_cell == PENALTY) {
+                    game.score += -SCORE_PENALTY;
+                }
+
+                game.nb_moves++;
+                game.labyrinth.board[current_point.line][current_point.col] = EMPTY;
                 current_point = next_point;
                 if (current_point.line != end_point.line ||
                     current_point.col != end_point.col) {
-                    labyrinth.board[current_point.line][current_point.col] = START;
+                    game.labyrinth.board[current_point.line][current_point.col] = PLAYER;
                 }
             } else {
                 printf("Mouvement invalide. Vous ne pouvez pas vous déplacer dans cette direction.\n");
             }
         }
-
-        printf("Bravo, vous avez trouvé la sortie en %d coup(s)!\n", nb_moves);
-        free_labyrinth(labyrinth);
+        game.score += (game.labyrinth.dim.height * game.labyrinth.dim.width) - (game.nb_moves * SCORE_PENALTY_MOVE); 
+        printf("Bravo, vous avez trouvé la sortie en %d coup(s) ! Score final : %d\n",
+               game.nb_moves, game.score);
+        free_labyrinth(game.labyrinth);
         menu();
     } else if (choice == 4) {
         // Quitter
@@ -280,11 +301,17 @@ void display_labyrinth(Dimensions dim, int ** labyrinth) {
         for (int j = 0; j < dim.width; j++) {
             if (labyrinth[i][j] == WALL) {
                 printf("# "); 
-            } else if (labyrinth[i][j] == START) {
+            } else if (labyrinth[i][j] == PLAYER) {
                 printf("o "); 
             } else if (labyrinth[i][j] == END) {
                 printf("- "); 
-            }  
+            } else if (labyrinth[i][j] == KEY) {
+                printf("K ");
+            } else if (labyrinth[i][j] == BONUS) {
+                printf("B ");
+            } else if (labyrinth[i][j] == PENALTY) {
+                printf("M ");
+            }
            else{
             printf("  ");
            }
@@ -297,10 +324,31 @@ void display_found_case(Dimensions dim, int **l) {
     printf("Cases trouvées :\n");
     for (int i = 0; i < dim.height; i++) {
         for (int j = 0; j < dim.width; j++) {
-            if (l[i][j] == -1) {
-                printf("# ");
-            } else {
-                printf("%c ", (char)l[i][j]);
+            switch (l[i][j]) {
+                case WALL:
+                    printf("# ");
+                    break;
+                case PLAYER:
+                    printf("o ");
+                    break;
+                case END:
+                    printf("- ");
+                    break;
+                case KEY:
+                    printf("K ");
+                    break;
+                case BONUS:
+                    printf("B ");
+                    break;
+                case PENALTY:
+                    printf("M ");
+                    break;
+                case EMPTY:
+                    printf("  ");
+                    break;
+                default:
+                    printf("%c ", (char)l[i][j]);
+                    break;
             }
         }
         printf("\n");

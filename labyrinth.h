@@ -1,18 +1,24 @@
 #ifndef LABYRINTH_H
 #define LABYRINTH_H
 
-#include <stdio.h>
-#include <stdlib.h>
+#define SCORE_FACTOR 20
+#define SCORE_PENALTY_MOVE 5
+#define SCORE_BONUS 20
+#define SCORE_PENALTY 10
+
 #include <stdbool.h>
-#include <time.h>
+
 
 #define LABYRINTH_DIRECTORY "labyrinths"
 
 enum cases {
+    EMPTY = 0,
     WALL = -1,
-    START = -2,
+    PLAYER = -2,
     END = -3,
-    KEY = -4
+    KEY = -4,
+    BONUS = -5,
+    PENALTY = -6
 };
 
 // Structures
@@ -40,6 +46,17 @@ typedef struct labyrinth
     PathPoints points;
 } Labyrinth;
 
+typedef struct {
+    int score;
+    bool is_key_found;
+    int nb_moves;
+    Labyrinth labyrinth;
+} Game;
+
+typedef struct {
+    char name[50];
+    int score;
+} Player;
 
 // Prototypes of the interface 
 void menu(void);
@@ -54,7 +71,10 @@ int **allocate_matrix(Dimensions dim, int val);
 void free_matrix(Dimensions dim, int **matrix);
 
 // Prototypes Labyrinth functions
-void initialize_game(Labyrinth labyrinth, PathPoints points);
+void initialize_game(Labyrinth labyrinth);
+void insert_key(Labyrinth labyrinth);
+void insert_bonus(Labyrinth labyrinth, int count);
+void insert_penalty(Labyrinth labyrinth, int count);
 int **allocate_labyrinth(Dimensions dim);
 void free_labyrinth(Labyrinth labyrinth);
 

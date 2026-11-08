@@ -10,14 +10,14 @@
 
 #include "labyrinth.h"
 
-void initialize_game(Labyrinth labyrinth, PathPoints points) {
+void initialize_game(Labyrinth labyrinth) {
     int cpt = 0;
 
     for (int i = 0; i < labyrinth.dim.height; i++) {
         for (int j = 0; j < labyrinth.dim.width; j++) {
-            if (i == points.start_line && j == points.start_col) {
-                labyrinth.board[i][j] = START;
-            } else if (i == points.end_line && j == points.end_col) {
+            if (i == labyrinth.points.start_line && j == labyrinth.points.start_col) {
+                labyrinth.board[i][j] = PLAYER;
+            } else if (i == labyrinth.points.end_line && j == labyrinth.points.end_col) {
                 labyrinth.board[i][j] = END;
             } else if (i % 2 == 1 && j % 2 == 1 &&
                        i < labyrinth.dim.height - 1 && j < labyrinth.dim.width - 1) {
@@ -29,6 +29,50 @@ void initialize_game(Labyrinth labyrinth, PathPoints points) {
         }
     }
 }
+
+static int insert_cases(Labyrinth labyrinth, int type, int count) {
+    int available = 0;
+    for (int row = 0; row < labyrinth.dim.height; row++) {
+        for (int col = 0; col < labyrinth.dim.width; col++) {
+            if (labyrinth.board[row][col] == EMPTY) {
+                available++;
+            }
+        }
+    }
+
+    if (count > available) {
+        count = available;
+    }
+
+    for (int i = 0; i < count; i++) {
+        int target = rand() % available;
+        for (int row = 0; row < labyrinth.dim.height; row++) {
+            for (int col = 0; col < labyrinth.dim.width; col++) {
+                if (labyrinth.board[row][col] == EMPTY && target-- == 0) {
+                    labyrinth.board[row][col] = type;
+                    available--;
+                    row = labyrinth.dim.height;
+                    break;
+                }
+            }
+        }
+    }
+
+    return count;
+}
+
+void insert_key(Labyrinth labyrinth) {
+    (void)insert_cases(labyrinth, KEY, 1);
+}
+
+void insert_bonus(Labyrinth labyrinth, int count) {
+    insert_cases(labyrinth, BONUS, count);
+}
+
+void insert_penalty(Labyrinth labyrinth, int count) {
+    insert_cases(labyrinth, PENALTY, count);
+}
+
 
 int **allocate_labyrinth(Dimensions dim) {
     int **labyrinth = malloc(dim.height * sizeof(int *));
@@ -64,7 +108,7 @@ bool is_walkable_cell(Point point, Labyrinth labyrinth) {
         return false;
     }
     int val_point = labyrinth.board[point.line][point.col];
-    return (val_point != WALL && val_point != START && val_point != END);
+    return val_point != WALL && val_point != PLAYER && val_point != END;
 }
 
 bool is_upper_cell_walkable(Point point, Labyrinth labyrinth) {
@@ -234,15 +278,36 @@ Labyrinth* create_labyrinth(Dimensions dim) {
         return NULL;
     }
 
-    PathPoints points;
-    points.start_col  = 1 + 2 * (rand() % ((dim.width - 1) / 2));
-    points.end_col    = 1 + 2 * (rand() % ((dim.width - 1) / 2));
-    points.start_line = 0;
-    points.end_line   = dim.height - 1;
-    labyrinth->points = points;
+    labyrinth->points.start_col = 1 + 2 * (rand() % ((dim.width - 1) / 2));
+    labyrinth->points.end_col = 1 + 2 * (rand() % ((dim.width - 1) / 2));
+    labyrinth->points.start_line = 0;
+    labyrinth->points.end_line = dim.height - 1;
 
-    initialize_game(*labyrinth, points);
+    initialize_game(*labyrinth);
     generate_path(*labyrinth);
+
+    int available_cells = 0;
+    for (int row = 0; row < dim.height; row++) {
+        for (int col = 0; col < dim.width; col++) {
+            int cell = labyrinth->board[row][col];
+            if (cell >= EMPTY) {
+                labyrinth->board[row][col] = EMPTY;
+                available_cells++;
+            }
+        }
+    }
+
+    if (available_cells == 0) {
+        fprintf(stderr, "Le labyrinthe ne contient aucune case disponible.\n");
+        free_labyrinth(*labyrinth);
+        free(labyrinth);
+        return NULL;
+    }
+
+    insert_key(*labyrinth);
+    int item_count = dim.height * dim.width / 20;
+    insert_bonus(*labyrinth, item_count);
+    insert_penalty(*labyrinth, item_count);
 
     return labyrinth;
 }
@@ -281,10 +346,16 @@ void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyr
             int cell = labyrinth->board[i][j];
             if (cell == WALL) {
                 fputs("#", file);
-            } else if (cell == START) {
+            } else if (cell == PLAYER) {
                 fputs("o", file);
             } else if (cell == END) {
                 fputs("-", file);
+            } else if (cell == KEY) {
+                fputs("K", file);
+            } else if (cell == BONUS) {
+                fputs("B", file);
+            } else if (cell == PENALTY) {
+                fputs("M", file);
             } else {
                 fputs(" ", file);
             }
@@ -351,6 +422,7 @@ int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
     int width = 0;
     int start_count = 0;
     int end_count = 0;
+    int key_count = 0;
     int valid = 1;
 
     if (getline(&line, &capacity, file) == -1) {
@@ -378,7 +450,10 @@ int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
                 start_count++;
             } else if (line[col] == '-') {
                 end_count++;
-            } else if (line[col] != '#' && line[col] != ' ') {
+            } else if (line[col] == 'K') {
+                key_count++;
+            } else if (line[col] != '#' && line[col] != ' ' &&
+                       line[col] != 'B' && line[col] != 'M') {
                 valid = 0;
                 break;
             }
@@ -390,7 +465,7 @@ int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
     }
 
     if (ferror(file) || height == 0 || width == 0 ||
-        start_count != 1 || end_count != 1) {
+        start_count != 1 || end_count != 1 || key_count > 1) {
         valid = 0;
     }
 
@@ -424,7 +499,7 @@ int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
                         loaded.board[row][col] = WALL;
                         break;
                     case 'o':
-                        loaded.board[row][col] = START;
+                        loaded.board[row][col] = PLAYER;
                         loaded.points.start_line = row;
                         loaded.points.start_col = col;
                         break;
@@ -433,12 +508,37 @@ int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
                         loaded.points.end_line = row;
                         loaded.points.end_col = col;
                         break;
+                    case 'K':
+                        loaded.board[row][col] = KEY;
+                        break;
+                    case 'B':
+                        loaded.board[row][col] = BONUS;
+                        break;
+                    case 'M':
+                        loaded.board[row][col] = PENALTY;
+                        break;
                     default:
                         loaded.board[row][col] = 0;
                         break;
                 }
             }
             row++;
+        }
+        if (valid && row == height) {
+            if (key_count == 0) {
+                insert_key(loaded);
+                int has_key = 0;
+                for (int loaded_row = 0; loaded_row < height; loaded_row++) {
+                    for (int col = 0; col < width; col++) {
+                        if (loaded.board[loaded_row][col] == KEY) {
+                            has_key = 1;
+                        }
+                    }
+                }
+                if (!has_key) {
+                    valid = 0;
+                }
+            }
         }
         if (valid && row == height) {
             *labyrinth = loaded;
