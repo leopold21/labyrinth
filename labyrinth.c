@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -6,6 +8,7 @@
 #include <string.h>
 #include <limits.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <dirent.h>
 
 #include "labyrinth.h"
@@ -320,14 +323,14 @@ void create_directory(char *path) {
         *sep = '/';
     }
     if(mkdir(path, 0777) && errno != EEXIST)
-        fprintf(stderr, "error while trying to create '%s'\n%m\n", path);
+        fprintf(stderr, "impossible de créer le dossier '%s'\n%m\n", path);
 }
 
 void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyrinth) {
     int result = mkdir(LABYRINTH_DIRECTORY, 0777);
 
     if(result && errno != EEXIST)
-        fprintf(stderr, "error while trying to create '%s'\n%m\n", LABYRINTH_DIRECTORY);
+        fprintf(stderr, "impossible de créer le dossier'%s'\n%m\n", LABYRINTH_DIRECTORY);
 
     char filepath[256];
     snprintf(filepath, sizeof(filepath), "%s/%s", LABYRINTH_DIRECTORY, fileName);
@@ -365,8 +368,6 @@ void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyr
 
     fclose(file);
     printf("Le fichier \"%s\" est bien sauvegardé\n\n", fileName);
-
-    menu();
 }
 
 int display_list_labyrinths() {
@@ -557,4 +558,121 @@ int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
     free(line);
     fclose(file);
     return valid;
+}
+
+static int compare_players_by_score(const void *left, const void *right) {
+    const Player *player_left = (const Player *)left;
+    const Player *player_right = (const Player *)right;
+
+    if (player_left->score < player_right->score) {
+        return 1;
+    }
+    if (player_left->score > player_right->score) {
+        return -1;
+    }
+    if (player_left->saved_at < player_right->saved_at) {
+        return -1;
+    }
+    if (player_left->saved_at > player_right->saved_at) {
+        return 1;
+    }
+    return strcmp(player_left->name, player_right->name);
+}
+
+static int read_ranking_file(const char *filepath, Player *players, int max_players) {
+    FILE *file = fopen(filepath, "r");
+    if (file == NULL) {
+        return 0;
+    }
+
+    int count = 0;
+    char line[256];
+    while (count < max_players && fgets(line, sizeof(line), file) != NULL) {
+        char name[50];
+        int score = 0;
+        long long saved_at = 0;
+
+        if (sscanf(line, "%49[^:]: %d: %lld", name, &score, &saved_at) == 3) {
+            snprintf(players[count].name, sizeof(players[count].name), "%s", name);
+            players[count].score = score;
+            players[count].saved_at = (time_t)saved_at;
+            count++;
+        } else if (sscanf(line, "%49[^:]: %d", name, &score) == 2) {
+            snprintf(players[count].name, sizeof(players[count].name), "%s", name);
+            players[count].score = score;
+            players[count].saved_at = 0;
+            count++;
+        }
+    }
+
+    fclose(file);
+    return count;
+}
+
+void display_ranking(const char *fileName) {
+    char filepath[256];
+    snprintf(filepath, sizeof(filepath), "%s/%s", RANKING_DIRECTORY, fileName);
+
+    Player players[200] = {0};
+    int count = read_ranking_file(filepath, players, 200);
+    if (count == 0) {
+        printf("Aucun classement disponible pour le fichier \"%s\".\n", fileName);
+        return;
+    }
+
+    qsort(players, (size_t)count, sizeof(Player), compare_players_by_score);
+    if (count > MAX_RANKING) {
+        count = MAX_RANKING;
+    }
+
+    printf("Classement pour le fichier \"%s\":\n", fileName);
+    for (int i = 0; i < count; i++) {
+        printf("%d. %s : %d\n", i + 1, players[i].name, players[i].score);
+    }
+}
+
+void create_ranking_directory() {
+    int result = mkdir(LABYRINTH_DIRECTORY, 0777);
+    if (result && errno != EEXIST) {
+        fprintf(stderr, "Impossible de créer le dossier '%s'\n%m\n", LABYRINTH_DIRECTORY);
+    }
+
+    result = mkdir(RANKING_DIRECTORY, 0777);
+    if (result && errno != EEXIST) {
+        fprintf(stderr, "Impossible de créer le dossier '%s'\n%m\n", RANKING_DIRECTORY);
+    }
+}
+
+void save_ranking(const char *fileName, const char *userName, int score) {
+    create_ranking_directory();
+
+    char filepath[256];
+    snprintf(filepath, sizeof(filepath), "%s/%s", RANKING_DIRECTORY, fileName);
+
+    Player players[201] = {0};
+    int count = read_ranking_file(filepath, players, 200);
+
+    Player new_player = {0};
+    snprintf(new_player.name, sizeof(new_player.name), "%s", userName);
+    new_player.score = score;
+    new_player.saved_at = time(NULL);
+    players[count] = new_player;
+    count++;
+
+    qsort(players, (size_t)count, sizeof(Player), compare_players_by_score);
+    if (count > MAX_RANKING) {
+        count = MAX_RANKING;
+    }
+
+    FILE *file = fopen(filepath, "w");
+    if (file == NULL) {
+        perror("Erreur: impossible de créer le fichier de classement");
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%s: %d: %lld\n", players[i].name, players[i].score,
+                (long long)players[i].saved_at);
+    }
+    fclose(file);
 }

@@ -1,15 +1,19 @@
 #ifndef LABYRINTH_H
 #define LABYRINTH_H
 
+#include <stdbool.h>
+#include <time.h>
+
+#define LABYRINTH_DIRECTORY "labyrinths"
+#define RANKING_DIRECTORY "labyrinths/ranking"
+
 #define SCORE_FACTOR 1000
 #define SCORE_PENALTY_MOVE 15
 #define SCORE_BONUS 45
 #define SCORE_PENALTY 30
 
-#include <stdbool.h>
+#define MAX_RANKING 10
 
-
-#define LABYRINTH_DIRECTORY "labyrinths"
 
 enum cases {
     EMPTY = 0,
@@ -56,6 +60,7 @@ typedef struct {
 typedef struct {
     char name[50];
     int score;
+    time_t saved_at;
 } Player;
 
 // Prototypes of the interface 
@@ -96,6 +101,10 @@ void generate_path(Labyrinth  labyrinth);
 
 Labyrinth* create_labyrinth(Dimensions dim);
 void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyrinth);
+void create_ranking_directory(void);
+void display_ranking(const char *fileName);
+void save_ranking(const char *fileName, const char *userName, int score);
+int end_by_txt(const char *fileName);
 void clear_buffer();
 int display_list_labyrinths();
 int load_labyrinth(const char *fileName, Labyrinth *labyrinth);

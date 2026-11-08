@@ -94,16 +94,14 @@ static int read_integer(const char *prompt, int *value) {
     }
 }
 
-static int load_labyrinth_interactively(Labyrinth *labyrinth) {
-    char fileName[200];
-
+static int load_labyrinth_interactively(Labyrinth *labyrinth, char *fileName,
+                                       size_t fileNameSize) {
     if (display_list_labyrinths() == -1) {
         return 0;
     }
 
-    clear_buffer();
     if (!read_required_line("Entrez le nom du fichier à charger : ",
-                            fileName, sizeof(fileName) - 4,
+                            fileName, fileNameSize,
                             "Nom de fichier trop long.")) {
         return -1;
     }
@@ -112,30 +110,26 @@ static int load_labyrinth_interactively(Labyrinth *labyrinth) {
 }
 
 void menu() {
-    int choice ;
+    int choice = 0;
+
     printf("---------- Bienvenue dans le jeu du labyrinthe ! ----------\n");
     printf(" Voulez-vous :\n");
     printf(" 1. Créer un labyrinthe\n");
     printf(" 2. Charger un labyrinthe\n");
     printf(" 3. Jouer\n");
     printf(" 4. Quitter\n");
-    printf("Faites votre choix: ");
 
-    if(scanf("%d", &choice) != 1){
-        printf("Choix invalide, le choix doit être un nombre entier compris entre 1 et 4");
-        clear_buffer();
-        menu();
+    if (!read_integer("Faites votre choix: ", &choice)) {
         return;
     }
+
     if (choice == 1) {
-        // Créer un labyrinthe
-        clear_buffer();
         Dimensions dim = set_dimensions();
         if (dim.height == 0) {
             return;
         }
-        Labyrinth *labyrinth = create_labyrinth(dim);
 
+        Labyrinth *labyrinth = create_labyrinth(dim);
         if (labyrinth != NULL) {
             char userName[100];
             char nameFile[100];
@@ -143,23 +137,32 @@ void menu() {
             if (!read_required_line("Entrez votre nom : ", userName,
                                     sizeof(userName), "Nom trop long.")) {
                 free_labyrinth(*labyrinth);
+                free(labyrinth);
                 return;
             }
 
-            if (!read_required_line("Sous quel nom, voulez-vous sauvegarder le fichier: ",
-                                    nameFile, sizeof(nameFile) - 4, "Nom de fichier trop long.")) {
+            if (!read_required_line("Sous quel nom, voulez-vous sauvegarder le fichier : ",
+                                    nameFile, sizeof(nameFile), "Nom de fichier trop long.")) {
                 free_labyrinth(*labyrinth);
+                free(labyrinth);
                 return;
             }
-            strcat(nameFile, ".txt");
+
+            if (strchr(nameFile, '.') == NULL) {
+                strcat(nameFile, ".txt");
+            }
+
             save_labyrinth(nameFile, userName, labyrinth);
             free_labyrinth(*labyrinth);
+            free(labyrinth);
         }
+        menu();
 
     } else if (choice == 2) {
-        // Charger un labyrinthe
         Labyrinth labyrinth = {0};
-        int result = load_labyrinth_interactively(&labyrinth);
+        char fileName[200] = {0};
+
+        int result = load_labyrinth_interactively(&labyrinth, fileName, sizeof(fileName));
         if (result == -1) {
             return;
         }
@@ -170,9 +173,10 @@ void menu() {
         menu();
 
     } else if (choice == 3) {
-        // Jouer
         Game game = {0};
-        int result = load_labyrinth_interactively(&game.labyrinth);
+        char fileName[200];
+
+        int result = load_labyrinth_interactively(&game.labyrinth, fileName, sizeof(fileName));
         if (result == -1) {
             return;
         }
@@ -195,12 +199,15 @@ void menu() {
             printf("Score (bonus/malus): %d | Coups : %d | Clé : %s\n",
                    game.score, game.nb_moves, game.is_key_found ? "oui" : "non");
             printf("Entrez votre mouvement (z : haut, s : bas, q : gauche, d : droite) : ");
-            char move;
+
+            char move = 0;
             if (scanf(" %c", &move) != 1) {
                 printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
+                clear_buffer();
                 free_labyrinth(game.labyrinth);
                 return;
             }
+            clear_buffer();
 
             Point next_point = current_point;
             if (move == 'z') {
@@ -247,15 +254,26 @@ void menu() {
                 printf("Mouvement invalide. Vous ne pouvez pas vous déplacer dans cette direction.\n");
             }
         }
-        game.score += SCORE_FACTOR - (game.nb_moves * SCORE_PENALTY_MOVE); 
+
+        game.score += SCORE_FACTOR - (game.nb_moves * SCORE_PENALTY_MOVE);
         printf("Bravo, vous avez trouvé la sortie en %d coup(s) ! Score final : %d\n",
                game.nb_moves, game.score);
+
+        char playerName[100];
+        if (!read_required_line("Entrez votre nom pour enregistrer votre score : ",
+                                playerName, sizeof(playerName), "Nom trop long.")) {
+            free_labyrinth(game.labyrinth);
+            return;
+        }
+
+        save_ranking(fileName, playerName, game.score);
+        display_ranking(fileName);
         free_labyrinth(game.labyrinth);
         menu();
+
     } else if (choice == 4) {
-        // Quitter
         printf("Merci d'avoir joué ! À bientôt !\n");
-       return;
+        return;
     } else {
         printf("Choix invalide. Le choix doit être un nombre entier compris entre 1 et 4.\n\n");
         menu();
