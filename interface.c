@@ -247,7 +247,7 @@ void menu() {
                 printf("Mouvement invalide. Vous ne pouvez pas vous déplacer dans cette direction.\n");
             }
         }
-        game.score += (game.labyrinth.dim.height * game.labyrinth.dim.width) - (game.nb_moves * SCORE_PENALTY_MOVE); 
+        game.score += SCORE_FACTOR - (game.nb_moves * SCORE_PENALTY_MOVE); 
         printf("Bravo, vous avez trouvé la sortie en %d coup(s) ! Score final : %d\n",
                game.nb_moves, game.score);
         free_labyrinth(game.labyrinth);

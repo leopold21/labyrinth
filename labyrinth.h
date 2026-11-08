@@ -1,10 +1,10 @@
 #ifndef LABYRINTH_H
 #define LABYRINTH_H
 
-#define SCORE_FACTOR 20
-#define SCORE_PENALTY_MOVE 5
-#define SCORE_BONUS 20
-#define SCORE_PENALTY 10
+#define SCORE_FACTOR 1000
+#define SCORE_PENALTY_MOVE 15
+#define SCORE_BONUS 45
+#define SCORE_PENALTY 30
 
 #include <stdbool.h>
 
