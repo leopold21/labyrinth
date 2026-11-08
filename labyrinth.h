@@ -5,7 +5,7 @@
 #include <time.h>
 
 #define LABYRINTH_DIRECTORY "labyrinths"
-#define RANKING_DIRECTORY "labyrinths/ranking"
+#define RANKING_DIRECTORY "ranking"
 
 #define SCORE_FACTOR 1000
 #define SCORE_PENALTY_MOVE 15
