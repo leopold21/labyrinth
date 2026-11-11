@@ -1,0 +1,11 @@
+Le créateur du labyrinth est: rd
+
+#######o#
+# #X  Y #
+# ##### #
+# #     #
+# ###X###
+# X K   #
+##### # #
+#  YYX#Y#
+#######-#

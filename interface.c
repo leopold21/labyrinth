@@ -4,6 +4,7 @@
 #include <limits.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "labyrinth.h"
 
@@ -109,6 +110,70 @@ static int load_labyrinth_interactively(Labyrinth *labyrinth, char *fileName,
     return load_labyrinth(fileName, labyrinth);
 }
 
+int saveLabyrinth_with_overwrite_check(const char *userName, Labyrinth *labyrinth) {
+    char enteredName[200];
+    char fileName[205];
+    char filepath[256];
+
+    for (;;) {
+        if (!read_required_line("Sous quel nom voulez-vous sauvegarder le labyrinthe : ",
+                                enteredName, sizeof(enteredName),
+                                "Nom de fichier trop long.")) {
+            return 0;
+        }
+
+        int length;
+        if (end_by_txt(enteredName)) {
+            length = snprintf(fileName, sizeof(fileName), "%s", enteredName);
+        } else {
+            length = snprintf(fileName, sizeof(fileName), "%s.txt", enteredName);
+        }
+        if (length < 0 || (size_t)length >= sizeof(fileName)) {
+            printf("Nom de fichier trop long. Veuillez réessayer.\n");
+            continue;
+        }
+
+        length = snprintf(filepath, sizeof(filepath), "%s/%s",
+                          LABYRINTH_DIRECTORY, fileName);
+        if (length < 0 || (size_t)length >= sizeof(filepath)) {
+            printf("Chemin de fichier trop long. Veuillez choisir un autre nom.\n");
+            continue;
+        }
+
+        struct stat file_info;
+        if (stat(filepath, &file_info) == 0) {
+            char answer[16];
+            for (;;) {
+                if (!read_required_line("Ce fichier existe déjà. Voulez-vous le remplacer ? (o/n) : ",
+                                        answer, sizeof(answer),
+                                        "Réponse trop longue.")) {
+                    return 0;
+                }
+
+                if (answer[1] == '\0' &&
+                    (answer[0] == 'o' || answer[0] == 'O')) {
+                    save_labyrinth(fileName, userName, labyrinth);
+                    return 1;
+                }
+                if (answer[1] == '\0' &&
+                    (answer[0] == 'n' || answer[0] == 'N')) {
+                    printf("Choisissez un autre nom.\n");
+                    break;
+                }
+                printf("Répondez par o (oui) ou n (non).\n");
+            }
+            continue;
+        }
+        if (errno != ENOENT) {
+            perror("Impossible de vérifier si le fichier existe");
+            return 0;
+        }
+
+        save_labyrinth(fileName, userName, labyrinth);
+        return 1;
+    }
+}
+
 static void display_game_labyrinth(Labyrinth labyrinth, const Monster monsters[],
                                    int monster_count) {
     for (int row = 0; row < labyrinth.dim.height; row++) {
@@ -161,7 +226,6 @@ void menu() {
         Labyrinth *labyrinth = create_labyrinth(dim);
         if (labyrinth != NULL) {
             char userName[100];
-            char nameFile[100];
 
             if (!read_required_line("Entrez votre nom : ", userName,
                                     sizeof(userName), "Nom trop long.")) {
@@ -170,18 +234,7 @@ void menu() {
                 return;
             }
 
-            if (!read_required_line("Sous quel nom, voulez-vous sauvegarder le fichier : ",
-                                    nameFile, sizeof(nameFile), "Nom de fichier trop long.")) {
-                free_labyrinth(*labyrinth);
-                free(labyrinth);
-                return;
-            }
-
-            if (strchr(nameFile, '.') == NULL) {
-                strcat(nameFile, ".txt");
-            }
-
-            save_labyrinth(nameFile, userName, labyrinth);
+            saveLabyrinth_with_overwrite_check(userName, labyrinth);
             free_labyrinth(*labyrinth);
             free(labyrinth);
         }
