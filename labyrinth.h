@@ -91,6 +91,8 @@ void menu(void);
 Dimensions set_dimensions(void);
 void set_name(char *name);
 void display_labyrinth(Dimensions dim, int **labyrinth);
+void display_labyrinth_with_monsters(Labyrinth labyrinth,
+                                     const Monster *monsters, int count);
 void display_found_case(Dimensions dim, int **l);
 
 // Prototypes of the memory management functions

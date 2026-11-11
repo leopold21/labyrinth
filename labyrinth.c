@@ -1,5 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -12,6 +10,14 @@
 #include <dirent.h>
 
 #include "labyrinth.h"
+
+/**
+ * @brief Initializes the labyrinth by setting up the board with walls, empty spaces, player, and end point.
+ * 
+ * @param labyrinth The labyrinth to initialize.
+ * 
+ * @return void
+ */
 
 void initialize_game(Labyrinth labyrinth) {
     int cpt = 0;
@@ -33,7 +39,17 @@ void initialize_game(Labyrinth labyrinth) {
     }
 }
 
-static int insert_cases(Labyrinth labyrinth, int type, int count) {
+/**
+ * @brief Inserts a specified number of cases of a given type into the labyrinth at random empty locations.
+ * 
+ * @param labyrinth The labyrinth where cases will be inserted.
+ * @param type The type of case to insert
+ * @param count The number of cases to insert.
+ * 
+ * @return The number of cases  inserted.
+ */
+
+int insert_cases(Labyrinth labyrinth, int type, int count) {
     int available = 0;
     for (int row = 0; row < labyrinth.dim.height; row++) {
         for (int col = 0; col < labyrinth.dim.width; col++) {
@@ -64,19 +80,49 @@ static int insert_cases(Labyrinth labyrinth, int type, int count) {
     return count;
 }
 
+/**
+ * @brief Inserts a key into the labyrinth at a random empty location.
+ * 
+ * @param labyrinth The labyrinth where the key will be inserted.
+ * 
+ * @return void
+ */
+
 void insert_key(Labyrinth labyrinth) {
     (void)insert_cases(labyrinth, KEY, 1);
 }
 
+/**
+ * @brief Inserts bonuses into the labyrinth at random empty locations.
+ * 
+ * @param labyrinth The labyrinth  where bonuses will be inserted.
+ * @param count The number of bonuses to insert.
+ * 
+ * @return void
+ */
 void insert_bonus(Labyrinth labyrinth, int count) {
     insert_cases(labyrinth, BONUS, count);
 }
 
+/**
+ * @brief Inserts penalties into the labyrinth at random empty locations.
+ * 
+ * @param labyrinth The labyrinth where penalties will be inserted.
+ * @param count The number of penalties to insert.
+ * 
+ * @return void
+ */
 void insert_penalty(Labyrinth labyrinth, int count) {
     insert_cases(labyrinth, PENALTY, count);
 }
 
-
+/**
+ * @brief Allocates memory for a labyrinth.
+ * 
+ * @param dim The dimensions of the labyrinth.
+ * 
+ * @return A pointer to the allocated labyrinth, or NULL if allocation fails.
+ */
 int **allocate_labyrinth(Dimensions dim) {
     int **labyrinth = malloc(dim.height * sizeof(int *));
     if (labyrinth == NULL) {
@@ -97,6 +143,13 @@ int **allocate_labyrinth(Dimensions dim) {
     return labyrinth;
 }
 
+/**
+ * @brief Frees the memory allocated for a labyrinth.
+ * 
+ * @param labyrinth The labyrinth to free.
+ * 
+ * @return void
+ */
 void free_labyrinth(Labyrinth labyrinth) {
     if (labyrinth.board == NULL) return;
     for (int i = 0; i < labyrinth.dim.height; i++) {
@@ -105,6 +158,14 @@ void free_labyrinth(Labyrinth labyrinth) {
     free(labyrinth.board);
 }
 
+/**
+ * @brief Checks if a cell is walkable.
+ * 
+ * @param point The point representing the cell to check.
+ * @param labyrinth The labyrinth.
+ * 
+ * @return true if the cell is walkable, false otherwise.
+ */
 bool is_walkable_cell(Point point, Labyrinth labyrinth) {
     if (point.line < 0 || point.line >= labyrinth.dim.height ||
         point.col < 0 || point.col >= labyrinth.dim.width) {
@@ -114,50 +175,121 @@ bool is_walkable_cell(Point point, Labyrinth labyrinth) {
     return val_point != WALL && val_point != PLAYER && val_point != END;
 }
 
+/**
+ * @brief Checks if the cell above the given point is walkable.
+ * 
+ * @param point The point representing the cell to check.
+ * @param labyrinth The labyrinth.
+ * 
+ * @return true if the cell above is walkable, false otherwise.
+ */
 bool is_upper_cell_walkable(Point point, Labyrinth labyrinth) {
     Point upper_point = {point.line - 1, point.col};
     return is_walkable_cell(upper_point, labyrinth);
 }
 
+/**
+ * @brief Checks if the cell below the given point is walkable.
+ * 
+ * @param point The point representing the cell to check.
+ * @param labyrinth The labyrinth.
+ * 
+ * @return true if the cell below is walkable, false otherwise.
+ */
 bool is_lower_cell_walkable(Point point, Labyrinth labyrinth) {
     Point lower_point = {point.line + 1, point.col};
     return is_walkable_cell(lower_point, labyrinth);
 }
 
+/**
+ * @brief Checks if the cell to the left of the given point is walkable.
+ * 
+ * @param point The point representing the cell to check.
+ * @param labyrinth The labyrinth.
+ * 
+ * @return true if the cell to the left is walkable, false otherwise.
+ */
 bool is_left_cell_walkable(Point point, Labyrinth labyrinth) {
     Point left_point = {point.line, point.col - 1};
     return is_walkable_cell(left_point, labyrinth);
 }
 
+/**
+ * @brief Checks if the cell to the right of the given point is walkable.
+ * 
+ * @param point The point representing the cell to check.
+ * @param labyrinth The labyrinth.
+ * 
+ * @return true if the cell to the right is walkable, false otherwise.
+ */
 bool is_right_cell_walkable(Point point, Labyrinth labyrinth) {
     Point right_point = {point.line, point.col + 1};
     return is_walkable_cell(right_point, labyrinth);
 }
 
+/**
+ * @brief Returns the point representing the cell above the given point.
+ * 
+ * @param point The point representing the cell to check.
+ * @param dim The dimensions of the labyrinth.
+ * 
+ * @return The point representing the cell above.
+ */
 Point upper_neighbor(Point point, Dimensions dim) {
     (void)dim;
     Point upper_point = {point.line - 1, point.col};
     return upper_point;
 }
 
+/**
+ * @brief Returns the point representing the cell below the given point.
+ * 
+ * @param point The point representing the cell to check.
+ * @param dim The dimensions of the labyrinth.
+ * 
+ * @return The point representing the cell below.
+ */
 Point lower_neighbor(Point point, Dimensions dim) {
     (void)dim;
     Point lower_point = {point.line + 1, point.col};
     return lower_point;
 }
 
+/**
+ * @brief Returns the point representing the cell to the left of the given point.
+ * 
+ * @param point The point representing the cell to check.
+ * @param dim The dimensions of the labyrinth.
+ * 
+ * @return The point representing the cell to the left.
+ */
 Point left_neighbor(Point point, Dimensions dim) {
     (void)dim;
     Point left_point = {point.line, point.col - 1};
     return left_point;
 }
 
+/**
+ * @brief Returns the point representing the cell to the right of the given point.
+ * 
+ * @param point The point representing the cell to check.
+ * @param dim The dimensions of the labyrinth.
+ * 
+ * @return The point representing the cell to the right.
+ */
 Point right_neighbor(Point point, Dimensions dim) {
     (void)dim;
     Point right_point = {point.line, point.col + 1};
     return right_point;
 }
 
+/**
+ * @brief Selects a random wall cell for path generation.
+ * 
+ * @param labyrinth The labyrinth.
+ * 
+ * @return The point representing the selected wall cell.
+ */
 Point random_selection_case(Labyrinth labyrinth) {
     Dimensions dim = labyrinth.dim;
     Point wall = {-1, -1};
@@ -197,6 +329,16 @@ Point random_selection_case(Labyrinth labyrinth) {
     return wall;
 }
 
+/**
+ * @brief Merges the components of two cells.
+ * 
+ * @param labyrinth The labyrinth.
+ * @param p1 The first point.
+ * @param p2 The second point.
+ * @param p3 The third point.
+ * 
+ * @return void
+ */
 void merge_components(Labyrinth labyrinth, Point p1, Point p2, Point p3) {
     int old_p3 = labyrinth.board[p3.line][p3.col];
     labyrinth.board[p2.line][p2.col] = labyrinth.board[p1.line][p1.col];
@@ -210,6 +352,13 @@ void merge_components(Labyrinth labyrinth, Point p1, Point p2, Point p3) {
     }
 }
 
+/**
+ * @brief Checks if a path can be generated in the labyrinth.
+ * 
+ * @param labyrinth The labyrinth.
+ * 
+ * @return true if a path can be generated, false otherwise.
+ */
 bool is_generate_path(Labyrinth labyrinth) {
     Point point;
     int number = -1;
@@ -230,6 +379,13 @@ bool is_generate_path(Labyrinth labyrinth) {
     return true;
 }
 
+/**
+ * @brief Generates a path in the labyrinth.
+ * 
+ * @param labyrinth The labyrinth.
+ * 
+ * @return void
+ */
 void generate_path(Labyrinth labyrinth) {
     Point wall;
     Point p1, p2, p3;
@@ -265,11 +421,27 @@ void generate_path(Labyrinth labyrinth) {
     }
 }
 
+/**
+ * @brief Checks if a wall cell is broken.
+ * 
+ * @param labyrinth The labyrinth.
+ * @param row The row of the cell to check.
+ * @param col The column of the cell to check.
+ * 
+ * @return true if the wall is broken, false otherwise.
+ */
 bool wall_is_broken(const Labyrinth *labyrinth, int row, int col) {
     return labyrinth->board[row][col] == WALL &&
            ((row % 2 == 0 && col % 2 == 1) || (row % 2 == 1 && col % 2 == 0));
 }
 
+/**
+ * @brief Counts the number of breakable walls in the labyrinth
+ * .
+ * @param labyrinth The labyrinth.
+ * 
+ * @return The number of breakable walls.
+ */
 int count_walls_breakable(Labyrinth *labyrinth) {
     int count = 0;
     for (int i = 1; i < labyrinth->dim.height - 1; i++) {
@@ -282,6 +454,13 @@ int count_walls_breakable(Labyrinth *labyrinth) {
     return count;
 }
 
+/**
+ * @brief Removes walls from the labyrinth.
+ * 
+ * @param labyrinth The labyrinth.
+ * 
+ * @return void
+ */
 void remove_walls(Labyrinth *labyrinth) {
     int total_walls_broken = count_walls_breakable(labyrinth);
     int walls_to_remove = total_walls_broken / WALL_REMOVAL_DIVISOR;
@@ -297,6 +476,13 @@ void remove_walls(Labyrinth *labyrinth) {
     }
 }
 
+/**
+ * @brief Creates a labyrinth with the specified dimensions and initializes it.
+ * 
+ * @param dim The dimensions of the labyrinth.
+ * 
+ * @return A pointer to the created labyrinth, or NULL if creation fails.   
+ */ 
 Labyrinth* create_labyrinth(Dimensions dim) {
     srand(time(NULL)); 
 
@@ -374,6 +560,13 @@ Labyrinth* create_labyrinth(Dimensions dim) {
     return labyrinth;
 }
 
+/**
+ * @brief Creates a directory at the specified path, including any necessary parent directories.
+ * 
+ * @param path The path of the directory to create.
+ * 
+ * @return void
+ */
 void create_directory(char *path) {
     char *sep = strrchr(path, '/');
     if(sep != NULL) {
@@ -385,6 +578,15 @@ void create_directory(char *path) {
         fprintf(stderr, "impossible de créer le dossier '%s'\n%m\n", path);
 }
 
+/**
+ * @brief Saves the labyrinth to a file.
+ * 
+ * @param fileName The name of the file to save the labyrinth to.
+ * @param userName The name of the user who created the labyrinth.
+ * @param labyrinth The labyrinth to save.
+ * 
+ * @return void
+ */
 void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyrinth) {
     int result = mkdir(LABYRINTH_DIRECTORY, 0777);
 
@@ -429,6 +631,11 @@ void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyr
     printf("Le fichier \"%s\" est bien sauvegardé\n\n", fileName);
 }
 
+/**
+ * @brief Displays the list of available labyrinths.
+ * 
+ * @return 0 on success, -1 on failure.
+ */
 int display_list_labyrinths() {
     const char *directory = LABYRINTH_DIRECTORY;
     DIR *dir = opendir(directory);
@@ -450,11 +657,25 @@ int display_list_labyrinths() {
     return 0;
 }
 
+/**
+ * @brief Checks if a file name ends with ".txt".
+ * 
+ * @param fileName The name of the file to check.
+ * 
+ * @return 1 if the file name ends with ".txt", 0 otherwise.
+ */
 int end_by_txt(const char *fileName) {
     size_t len = strlen(fileName);
     return (len >= 4 && strcmp(fileName + len - 4, ".txt") == 0);
 }
 
+/**
+ * @brief Parses and loads a labyrinth grid structure from a saved text file.
+ * 
+ * @param fileName Name of file to open.
+ * @param labyrinth Pointer to target Labyrinth structure to store board data.
+ * @return int 1 if loading and validation succeed, 0 on format error or missing file.
+ */
 int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
     const char *directory = LABYRINTH_DIRECTORY;
     char filePath[256];
@@ -622,7 +843,16 @@ int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
     return valid;
 }
 
-static int compare_players_by_score(const void *left, const void *right) {
+/**
+ * @brief Compares two players based on their scores, saved times, and names for sorting purposes.
+ * 
+ * @param left Pointer to the first player.
+ * @param right Pointer to the second player.
+ * 
+ * @return A negative value if the first player should come before the second, a positive value if the first player should come after the second, or zero if they are equal.
+ */
+
+int compare_players_by_score(const void *left, const void *right) {
     const Player *player_left = (const Player *)left;
     const Player *player_right = (const Player *)right;
 
@@ -641,7 +871,16 @@ static int compare_players_by_score(const void *left, const void *right) {
     return strcmp(player_left->name, player_right->name);
 }
 
-static int read_ranking_file(const char *filepath, Player *players, int max_players) {
+/**
+ * @brief Reads the ranking file and populates the players array with player information.
+ * 
+ * @param filepath The path to the ranking file.
+ * @param players The array of Player to populate.
+ * @param max_players The maximum number of players to read.
+ * 
+ * @return The number of players read from the file.    
+ */
+int read_ranking_file(const char *filepath, Player *players, int max_players) {
     FILE *file = fopen(filepath, "r");
     if (file == NULL) {
         return 0;
@@ -671,6 +910,13 @@ static int read_ranking_file(const char *filepath, Player *players, int max_play
     return count;
 }
 
+/**
+ * @brief Displays the ranking for a given file.
+ * 
+ * @param fileName The name of the file for which to display ranking.
+ * 
+ * @return void
+ */
 void display_ranking(const char *fileName) {
     char filepath[256];
     snprintf(filepath, sizeof(filepath), "%s/%s.score", RANKING_DIRECTORY, fileName);
@@ -693,6 +939,11 @@ void display_ranking(const char *fileName) {
     }
 }
 
+/**
+ * @brief Creates the ranking directory if it does not exist.
+ * 
+ * @return void
+ */
 void create_ranking_directory() {
     int result = mkdir(LABYRINTH_DIRECTORY, 0777);
     if (result && errno != EEXIST) {
@@ -705,6 +956,14 @@ void create_ranking_directory() {
     }
 }
 
+/**
+ * @brief Saves the ranking for a given file.
+ * 
+ * @param fileName The name of the file for which to save ranking.
+ * @param userName The name of the user to add to the ranking.
+ * 
+ * @param score The score of the user.
+ */
 void save_ranking(const char *fileName, const char *userName, int score) {
     create_ranking_directory();
 

@@ -2,6 +2,15 @@
 
 #include <stdlib.h>
 
+/**
+ * @brief Computes neighboring cell coordinates based on a numerical direction index.
+ * 
+ * @param point Current grid point.
+ * @param direction Direction index.
+ * @param dim Labyrinth dimensions.
+ * 
+ * @return Point Target neighbor coordinates.
+ */
 static Point neighbor(Point point, int direction, Dimensions dim) {
     switch (direction) {
         case 0: return upper_neighbor(point, dim);
@@ -11,17 +20,41 @@ static Point neighbor(Point point, int direction, Dimensions dim) {
     }
 }
 
+/**
+ * @brief Checks if a given point lies within the labyrinth boundary constraints.
+ * 
+ * @param point Target coordinates to evaluate.
+ * @param dim Labyrinth dimensions.
+ * 
+ * @return true If the point is inside board boundaries, false otherwise.
+ */
 static bool in_bounds(Point point, Dimensions dim) {
     return point.line >= 0 && point.line < dim.height &&
            point.col >= 0 && point.col < dim.width;
 }
 
+/**
+ * @brief Calculates the Manhattan distance between two grid points.
+ * 
+ * @param left First point coordinates.
+ * @param right Second point coordinates.
+ * 
+ * @return int Total Manhattan distance between the two points.
+ */
 static int distance(Point left, Point right) {
     int rows = abs(left.line - right.line);
     int cols = abs(left.col - right.col);
     return rows + cols;
 }
 
+/**
+ * @brief Movement strategy routine for Ghost monsters.
+ * 
+ * @param monster Pointer to the Ghost instance to update.
+ * @param labyrinth Pointer to the current Labyrinth state.
+ * 
+ * @return void
+ */
 static void move_ghost(Monster *monster, Labyrinth *labyrinth) {
     int first_direction = rand() % 4;
     for (int offset = 0; offset < 4; offset++) {
@@ -36,6 +69,14 @@ static void move_ghost(Monster *monster, Labyrinth *labyrinth) {
     }
 }
 
+/**
+ * @brief Movement strategy routine for Ogre monsters.
+ * 
+ * @param monster Pointer to the Ogre instance to update.
+ * @param labyrinth Pointer to the current Labyrinth state.
+ * 
+ * @return void
+ */
 static void move_ogre(Monster *monster, Labyrinth *labyrinth) {
     int first_direction = rand() % 4;
     for (int offset = 0; offset < 4; offset++) {
@@ -57,6 +98,15 @@ static void move_ogre(Monster *monster, Labyrinth *labyrinth) {
     }
 }
 
+/**
+ * @brief Instantiates and initializes a new Monster structure.
+ * 
+ * @param point Starting position coordinates for the monster.
+ * @param type Monster classification type (GHOST or OGRE).
+ * @param penalty_points Score penalty value inflicted on player collision.
+ * 
+ * @return Monster Initialized Monster object configured with its corresponding movement handler.
+ */
 Monster create_monster(Point point, enum type_monster type, int penalty_points) {
     Monster monster = {0};
     monster.point = point;
@@ -74,6 +124,16 @@ Monster create_monster(Point point, enum type_monster type, int penalty_points) 
     return monster;
 }
 
+/**
+ * @brief Checks if a specific cell coordinate is currently occupied by an active monster.
+ * 
+ * @param monsters Array of active Monster structures.
+ * @param count Number of elements currently present in the monsters array.
+ * @param row Target row index.
+ * @param col Target column index.
+ * 
+ * @return true If a monster already occupies the cell, false otherwise.
+ */
 static bool monster_occupies(const Monster monsters[], int count, int row, int col) {
     for (int i = 0; i < count; i++) {
         if (monsters[i].point.line == row && monsters[i].point.col == col) {
@@ -83,6 +143,15 @@ static bool monster_occupies(const Monster monsters[], int count, int row, int c
     return false;
 }
 
+/**
+ * @brief Randomly places monsters onto empty grid cells across the labyrinth board.
+ * 
+ * @param labyrinth Pointer to the target Labyrinth structure.
+ * @param monsters Output array allocated to hold monster instances.
+ * @param max_monsters Maximum capacity limit of the monsters array.
+ * 
+ * @return int Total number of monsters successfully placed.
+ */
 int place_monsters(Labyrinth *labyrinth, Monster monsters[], int max_monsters) {
     if (labyrinth == NULL || labyrinth->board == NULL ||
         monsters == NULL || max_monsters <= 0) {
@@ -124,7 +193,15 @@ int place_monsters(Labyrinth *labyrinth, Monster monsters[], int max_monsters) {
     }
     return placed;
 }
-
+/**
+ * @brief Iterates over all active monsters and invokes their respective movement functions.
+ * 
+ * @param monsters Array containing active Monster instances.
+ * @param nb_monsters Count of active monsters in the array.
+ * @param labyrinth Pointer to the active Labyrinth instance.
+ * 
+ * @return void
+ */
 void move_all_monsters(Monster monsters[], int nb_monsters, Labyrinth *labyrinth) {
     if (monsters == NULL || labyrinth == NULL) {
         return;

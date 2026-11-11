@@ -8,6 +8,14 @@
 
 #include "labyrinth.h"
 
+/**
+ * @brief Reads a line from standard input.
+ * 
+ * @param buffer The buffer to store the read line.
+ * @param size The size of the buffer.
+ * 
+ * @return 0 if the end of file is reached, -1 if the line is too long, 1 otherwise.
+ */
 static int read_line(char *buffer, size_t size) {
     if (fgets(buffer, size, stdin) == NULL) {
         return 0;
@@ -27,6 +35,16 @@ static int read_line(char *buffer, size_t size) {
     return 1;
 }
 
+/**
+ *  @brief Reads a required line from standard input.
+ * 
+ * @param prompt The prompt to display.
+ * @param buffer The buffer to store the read line.
+ * @param size The size of the buffer.
+ * @param tooLongMessage The message to display if the line is too long.
+ * 
+ * @return 0 if the end of file is reached, -1 if the line is too long, 1 otherwise.
+ */
 static int read_required_line(const char *prompt, char *buffer, size_t size,
                               const char *tooLongMessage) {
     for (;;) {
@@ -63,6 +81,13 @@ static int read_required_line(const char *prompt, char *buffer, size_t size,
     }
 }
 
+/** @brief Reads an integer from standard input.
+ * 
+ * @param prompt The prompt to display.
+ * @param value The pointer to store the read integer.
+ * 
+ * @return 0 if the end of file is reached, -1 if the input is invalid, 1 otherwise.
+ */
 static int read_integer(const char *prompt, int *value) {
     char input[100];
 
@@ -94,7 +119,14 @@ static int read_integer(const char *prompt, int *value) {
         return 1;
     }
 }
-
+/** @brief Loads a labyrinth from a file.
+ * 
+ * @param labyrinth The labyrinth structure to populate.
+ * @param fileName The name of the file to load.
+ * @param fileNameSize The size of the file name buffer.
+ * 
+ * @return 0 if the labyrinth is loaded successfully, -1 otherwise.
+ */
 static int load_labyrinth_interactively(Labyrinth *labyrinth, char *fileName,
                                        size_t fileNameSize) {
     if (display_list_labyrinths() == -1) {
@@ -110,6 +142,14 @@ static int load_labyrinth_interactively(Labyrinth *labyrinth, char *fileName,
     return load_labyrinth(fileName, labyrinth);
 }
 
+/**
+ * @brief Saves a labyrinth to a file, checking for overwrite if the file already exists.
+ * 
+ * @param userName The name of the user saving the labyrinth.
+ * @param labyrinth The labyrinth to save.
+ * 
+ * @return 0 if the labyrinth is saved successfully, -1 otherwise.
+ */
 int saveLabyrinth_with_overwrite_check(const char *userName, Labyrinth *labyrinth) {
     char enteredName[200];
     char fileName[205];
@@ -174,34 +214,165 @@ int saveLabyrinth_with_overwrite_check(const char *userName, Labyrinth *labyrint
     }
 }
 
-static void display_game_labyrinth(Labyrinth labyrinth, const Monster monsters[],
-                                   int monster_count) {
-    for (int row = 0; row < labyrinth.dim.height; row++) {
-        for (int col = 0; col < labyrinth.dim.width; col++) {
-            bool monster_found = false;
-            for (int i = 0; i < monster_count; i++) {
-                if (monsters[i].point.line == row && monsters[i].point.col == col) {
-                    printf("%c ", monsters[i].type);
-                    monster_found = true;
-                    break;
-                }
-            }
-            if (monster_found) {
-                continue;
-            }
+/**
+ * @brief Reads the player's desired move direction and calculates the next position.
+ * 
+ * @param current The current position of the player.
+ * @param dim The dimensions of the labyrinth.
+ * @param next The pointer to store the calculated next position.
+ * 
+ * @return 0 if the end of file is reached, -1 if the input is invalid, 1 if the move is valid.
+ */
+ int read_player_destination(Point current, Dimensions dim, Point *next) {
+    printf("Entrez votre mouvement (z : haut, s : bas, q : gauche, d : droite) : ");
+    char move = 0;
+    if (scanf(" %c", &move) != 1) {
+        printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
+        clear_buffer();
+        return 0;
+    }
+    clear_buffer();
 
-            int cell = labyrinth.board[row][col];
-            if (cell == WALL) printf("# ");
-            else if (cell == PLAYER) printf("o ");
-            else if (cell == END) printf("- ");
-            else if (cell == KEY) printf("K ");
-            else if (cell == BONUS) printf("X ");
-            else if (cell == PENALTY) printf("Y ");
-            else printf("  ");
-        }
-        printf("\n");
+    switch (move) {
+        case 'z': *next = upper_neighbor(current, dim); return 1;
+        case 's': *next = lower_neighbor(current, dim); return 1;
+        case 'q': *next = left_neighbor(current, dim); return 1;
+        case 'd': *next = right_neighbor(current, dim); return 1;
+        default:
+            printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
+            return -1;
     }
 }
+
+/**
+ * @brief Attempts to move the player to the next position, handling interactions with the labyrinth and monsters.
+ * 
+ * @param game The current game state.
+ * @param current The current position of the player.
+ * @param next The desired next position of the player.
+ * @param monsters The array of monsters in the labyrinth.
+ * @param monster_count The number of monsters in the labyrinth.  
+ *   
+ * @return true if the move is successful, false otherwise.
+ */
+static bool try_player_move(Game *game, Point *current, Point next,
+                           Monster monsters[], int monster_count) {
+    Labyrinth *labyrinth = &game->labyrinth;
+    if (next.line < 0 || next.line >= labyrinth->dim.height ||
+        next.col < 0 || next.col >= labyrinth->dim.width) {
+        printf("Mouvement invalide. Vous ne pouvez pas vous déplacer dans cette direction.\n");
+        return false;
+    }
+
+    int next_cell = labyrinth->board[next.line][next.col];
+    if (next_cell == WALL) {
+        printf("Mouvement invalide. Vous ne pouvez pas traverser un mur.\n");
+        return false;
+    }
+    if (next_cell == END && !game->is_key_found) {
+        printf("La sortie est verrouillée. Trouvez d'abord la clé (K).\n");
+        return false;
+    }
+
+    if (next_cell == KEY) {
+        game->is_key_found = true;
+    } else if (next_cell == BONUS) {
+        game->score += SCORE_BONUS;
+    } else if (next_cell == PENALTY) {
+        game->score -= SCORE_PENALTY;
+    }
+
+    game->nb_moves++;
+    labyrinth->board[current->line][current->col] = EMPTY;
+    *current = next;
+    if (current->line != labyrinth->points.end_line ||
+        current->col != labyrinth->points.end_col) {
+        labyrinth->board[current->line][current->col] = PLAYER;
+    }
+
+    move_all_monsters(monsters, monster_count, labyrinth);
+    for (int i = 0; i < monster_count; i++) {
+        if (monsters[i].point.line == current->line &&
+            monsters[i].point.col == current->col) {
+            game->score -= monsters[i].penalty_points;
+            printf("Un monstre vous a touché : -%d points.\n",
+                   monsters[i].penalty_points);
+        }
+    }
+    return true;
+}
+
+/**
+ * @brief Executes the main loop of the labyrinth game.
+ * 
+ * @param game Pointer to the structure holding the current game state.
+ * @param fileName Name of the labyrinth file currently being played.
+ * 
+ * @return int 1 if the game finished normally, 0 if interrupted or upon memory allocation failure.
+ */
+int play_labyrinth(Game *game, const char *fileName) {
+    printf("----------------------Jeu du labyrinthe----------------------\n");
+    printf("Vous êtes représenté par 'o'. Ramassez la clé (K) pour ouvrir la sortie (-).\n");
+    printf("Un bonus (X) ajoute 1 point ; un malus (Y) retire 1 point.\n");
+    printf("Fantôme (F) : traverse les murs ; ogre (O) : reste dans son territoire.\n");
+    printf("Vous pouvez vous déplacer en utilisant les touches 'z' (haut), 's' (bas), 'q' (gauche) et 'd' (droite).\n");
+    printf("Bonne chance !\n\n");
+
+    Point current = {game->labyrinth.points.start_line,
+                     game->labyrinth.points.start_col};
+    Point end = {game->labyrinth.points.end_line, game->labyrinth.points.end_col};
+    int size = game->labyrinth.dim.height * game->labyrinth.dim.width;
+    int max_monsters = size / CELL_PER_MONSTER;
+    if (max_monsters < 1) {
+        max_monsters = 1;
+    }
+
+    Monster *monsters = malloc((size_t)max_monsters * sizeof(*monsters));
+    if (monsters == NULL) {
+        perror("Erreur d'allocation pour les monstres");
+        return 0;
+    }
+
+    srand((unsigned int)time(NULL));
+    int monster_count = place_monsters(&game->labyrinth, monsters, max_monsters);
+    while (current.line != end.line || current.col != end.col) {
+        display_labyrinth_with_monsters(game->labyrinth, monsters, monster_count);
+        printf("Score (bonus(X)/malus(Y)): %d | Coups : %d | Clé (K): %s\n",
+               game->score, game->nb_moves, game->is_key_found ? "oui" : "non");
+
+        Point next;
+        int input_status = read_player_destination(current, game->labyrinth.dim, &next);
+        if (input_status == 0) {
+            free(monsters);
+            return 0;
+        }
+        if (input_status < 0) {
+            continue;
+        }
+        try_player_move(game, &current, next, monsters, monster_count);
+    }
+
+    game->score += SCORE_FACTOR - (game->nb_moves * SCORE_PENALTY_MOVE);
+    printf("Bravo, vous avez trouvé la sortie en %d coup(s) ! Score final : %d\n",
+           game->nb_moves, game->score);
+    free(monsters);
+
+    char playerName[100];
+    if (!read_required_line("Entrez votre nom pour enregistrer votre score : ",
+                            playerName, sizeof(playerName), "Nom trop long.")) {
+        return 0;
+    }
+
+    save_ranking(fileName, playerName, game->score);
+    display_ranking(fileName);
+    return 1;
+}
+
+/**
+ * @brief Displays the main menu and handles user selection.
+ * 
+ * @return void
+ */
 
 void menu() {
     int choice = 0;
@@ -267,119 +438,10 @@ void menu() {
             return;
         }
 
-        printf("----------------------Jeu du labyrinthe----------------------\n");
-        printf("Vous êtes représenté par 'o'. Ramassez la clé (K) pour ouvrir la sortie (-).\n");
-        printf("Un bonus (X) ajoute 1 point ; un malus (Y) retire 1 point.\n");
-        printf("Fantôme (F) : traverse les murs ; ogre (O) : reste dans son territoire.\n");
-        printf("Vous pouvez vous déplacer en utilisant les touches 'z' (haut), 's' (bas), 'q' (gauche) et 'd' (droite).\n");
-        printf("Bonne chance !\n\n");
-
-        Point current_point = {game.labyrinth.points.start_line, game.labyrinth.points.start_col};
-        Point end_point = {game.labyrinth.points.end_line, game.labyrinth.points.end_col};
-
-        int size = game.labyrinth.dim.height * game.labyrinth.dim.width;
-        int max_monsters = size / CELL_PER_MONSTER;
-        if (max_monsters < 1) {
-            max_monsters = 1;
-        }
-
-        Monster *monsters = malloc((size_t)max_monsters * sizeof(Monster));
-        if (monsters == NULL) {
-            perror("Erreur d'allocation pour les monstres");
+        if (!play_labyrinth(&game, fileName)) {
             free_labyrinth(game.labyrinth);
             return;
         }
-
-        srand((unsigned int)time(NULL));
-        int monster_count = place_monsters(&game.labyrinth, monsters, max_monsters);
-
-        while (current_point.line != end_point.line || current_point.col != end_point.col) {
-            display_game_labyrinth(game.labyrinth, monsters, monster_count);
-            printf("Score (bonus(X)/malus(Y)): %d | Coups : %d | Clé (K): %s\n",
-                   game.score, game.nb_moves, game.is_key_found ? "oui" : "non");
-            printf("Entrez votre mouvement (z : haut, s : bas, q : gauche, d : droite) : ");
-
-            char move = 0;
-            if (scanf(" %c", &move) != 1) {
-                printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
-                clear_buffer();
-                free(monsters);
-                free_labyrinth(game.labyrinth);
-                return;
-            }
-            clear_buffer();
-
-            Point next_point = current_point;
-            if (move == 'z') {
-                next_point = upper_neighbor(current_point, game.labyrinth.dim);
-            } else if (move == 's') {
-                next_point = lower_neighbor(current_point, game.labyrinth.dim);
-            } else if (move == 'q') {
-                next_point = left_neighbor(current_point, game.labyrinth.dim);
-            } else if (move == 'd') {
-                next_point = right_neighbor(current_point, game.labyrinth.dim);
-            } else {
-                printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
-                continue;
-            }
-
-            if (next_point.line >= 0 && next_point.line < game.labyrinth.dim.height &&
-                next_point.col >= 0 && next_point.col < game.labyrinth.dim.width) {
-                int next_cell = game.labyrinth.board[next_point.line][next_point.col];
-                if (next_cell == WALL) {
-                    printf("Mouvement invalide. Vous ne pouvez pas traverser un mur.\n");
-                    continue;
-                }
-                if (next_cell == END && !game.is_key_found) {
-                    printf("La sortie est verrouillée. Trouvez d'abord la clé (K).\n");
-                    continue;
-                }
-
-                if (next_cell == KEY) {
-                    game.is_key_found = true;
-                } else if (next_cell == BONUS) {
-                    game.score += SCORE_BONUS;
-                } else if (next_cell == PENALTY) {
-                    game.score += -SCORE_PENALTY;
-                }
-
-                game.nb_moves++;
-                game.labyrinth.board[current_point.line][current_point.col] = EMPTY;
-                current_point = next_point;
-                if (current_point.line != end_point.line ||
-                    current_point.col != end_point.col) {
-                    game.labyrinth.board[current_point.line][current_point.col] = PLAYER;
-                }
-
-                move_all_monsters(monsters, monster_count, &game.labyrinth);
-
-                for (int i = 0; i < monster_count; i++) {
-                    if (monsters[i].point.line == current_point.line &&
-                        monsters[i].point.col == current_point.col) {
-                        game.score -= monsters[i].penalty_points;
-                        printf("Un monstre vous a touché : -%d points.\n",
-                               monsters[i].penalty_points);
-                    }
-                }
-            } else {
-                printf("Mouvement invalide. Vous ne pouvez pas vous déplacer dans cette direction.\n");
-            }
-        }
-
-        game.score += SCORE_FACTOR - (game.nb_moves * SCORE_PENALTY_MOVE);
-        printf("Bravo, vous avez trouvé la sortie en %d coup(s) ! Score final : %d\n", game.nb_moves, game.score);
-
-        free(monsters);
-
-        char playerName[100];
-        if (!read_required_line("Entrez votre nom pour enregistrer votre score : ",
-                                playerName, sizeof(playerName), "Nom trop long.")) {
-            free_labyrinth(game.labyrinth);
-            return;
-        }
-
-        save_ranking(fileName, playerName, game.score);
-        display_ranking(fileName);
         free_labyrinth(game.labyrinth);
         menu();
     } else if (choice == 4) {
@@ -391,6 +453,11 @@ void menu() {
     }
 }
 
+/**
+ * @brief Prompts for and validates the dimensions (height and width) for a new labyrinth. 
+ * 
+ * @return Dimensions containing the chosen height and width
+ */
 Dimensions set_dimensions() {
     Dimensions dim = {0, 0};
 
@@ -420,10 +487,24 @@ Dimensions set_dimensions() {
     return dim;
 }
 
+/**
+ * @brief Prompts for the player's name via standard input.
+ * 
+ * @param name Output buffer for storing the player name.
+ * 
+ * @return void
+ */
 void set_name(char *name) {
     read_required_line("Entrez votre nom : ", name, 50, "Nom trop long.");
 }
 
+/**
+ * @brief Prints a single formatted character corresponding to a labyrinth cell type.
+ * 
+ * @param cell Integer value representing the cell type.
+ * 
+ * @return void
+ */
 
 static void display_case(int cell) {
     if (cell == WALL) {
@@ -443,6 +524,14 @@ static void display_case(int cell) {
     }
 }
 
+/**
+ * @brief Renders the entire labyrinth grid in the console.
+ * 
+ * @param dim Dimensions of the labyrinth (height and width).
+ * @param labyrinth 2D array representing the game board.
+ * 
+ * @return void
+ */
 void display_labyrinth(Dimensions dim, int **labyrinth) {
     for (int i = 0; i < dim.height; i++) {
         for (int j = 0; j < dim.width; j++) {
@@ -452,6 +541,14 @@ void display_labyrinth(Dimensions dim, int **labyrinth) {
     }
 }
 
+/**
+ * @brief Renders the labyrinth grid while overlaying monster positions.
+ *
+ * @param labyrinth Labyrinth structure containing board data.
+ * @param monsters Array of active Monster structures.
+ * @param count Total number of monsters in the array.
+ * @return void
+ */
 void display_labyrinth_with_monsters(Labyrinth labyrinth,
                                      const Monster *monsters, int count) {
     for (int row = 0; row < labyrinth.dim.height; row++) {
@@ -472,6 +569,14 @@ void display_labyrinth_with_monsters(Labyrinth labyrinth,
     }
 }
 
+/**
+ * @brief Renders the grid, casting unknown cell values directly to characters.
+ * 
+ * @param dim Dimensions of the labyrinth.
+ * @param l 2D array representing the game board.
+ * 
+ * @return void
+ */
 void display_found_case(Dimensions dim, int **l) {
     printf("Cases trouvées :\n");
     for (int i = 0; i < dim.height; i++) {
