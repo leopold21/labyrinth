@@ -614,7 +614,7 @@ static int read_ranking_file(const char *filepath, Player *players, int max_play
 
 void display_ranking(const char *fileName) {
     char filepath[256];
-    snprintf(filepath, sizeof(filepath), "%s/%s", RANKING_DIRECTORY, fileName);
+    snprintf(filepath, sizeof(filepath), "%s/%s.score", RANKING_DIRECTORY, fileName);
 
     Player players[200] = {0};
     int count = read_ranking_file(filepath, players, 200);
@@ -650,7 +650,7 @@ void save_ranking(const char *fileName, const char *userName, int score) {
     create_ranking_directory();
 
     char filepath[256];
-    snprintf(filepath, sizeof(filepath), "%s/%s", RANKING_DIRECTORY, fileName);
+    snprintf(filepath, sizeof(filepath), "%s/%s.score", RANKING_DIRECTORY, fileName);
 
     Player players[201] = {0};
     int count = read_ranking_file(filepath, players, 200);
