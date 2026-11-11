@@ -1,0 +1,11 @@
+Le créateur du labyrinth est: leo
+
+###o#####
+#K     Y#
+#X### ###
+#  Y  X #
+### # ###
+#  X#  Y#
+# #Y### #
+#X# #   #
+#-#######

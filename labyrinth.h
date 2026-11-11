@@ -32,6 +32,11 @@ enum level {
     HARD = 2
 };
 
+enum type_monster {
+    GHOST = 'G',
+    OGRE = 'O'
+};
+
 // Structures
 typedef struct {
     int height;
@@ -50,12 +55,14 @@ typedef struct {
     int col;
 } Point;
 
-typedef struct labyrinth
-{
+typedef struct labyrinth {
     Dimensions dim;
     int **board;
     PathPoints points;
 } Labyrinth;
+
+typedef struct Monster Monster;
+typedef void (*MonsterMove)(Monster *monster, Labyrinth *labyrinth);
 
 typedef struct {
     int score;
@@ -69,6 +76,14 @@ typedef struct {
     int score;
     time_t saved_at;
 } Player;
+
+struct Monster {
+    Point point;
+    Point territory_center;
+    enum type_monster type;
+    int penalty_points;
+    MonsterMove move;
+};
 
 // Prototypes of the interface 
 void menu(void);
@@ -115,4 +130,9 @@ int end_by_txt(const char *fileName);
 void clear_buffer();
 int display_list_labyrinths();
 int load_labyrinth(const char *fileName, Labyrinth *labyrinth);
+
+Monster create_monster(Point point, enum type_monster type, int penalty_points);
+int place_monsters(Labyrinth *labyrinth, Monster monsters[], int max_monsters);
+void move_all_monsters(Monster monsters[], int nb_monsters, Labyrinth *labyrinth);
+
 #endif

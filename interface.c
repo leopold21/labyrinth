@@ -109,6 +109,35 @@ static int load_labyrinth_interactively(Labyrinth *labyrinth, char *fileName,
     return load_labyrinth(fileName, labyrinth);
 }
 
+static void display_game_labyrinth(Labyrinth labyrinth, const Monster monsters[],
+                                   int monster_count) {
+    for (int row = 0; row < labyrinth.dim.height; row++) {
+        for (int col = 0; col < labyrinth.dim.width; col++) {
+            bool monster_found = false;
+            for (int i = 0; i < monster_count; i++) {
+                if (monsters[i].point.line == row && monsters[i].point.col == col) {
+                    printf("%c ", monsters[i].type);
+                    monster_found = true;
+                    break;
+                }
+            }
+            if (monster_found) {
+                continue;
+            }
+
+            int cell = labyrinth.board[row][col];
+            if (cell == WALL) printf("# ");
+            else if (cell == PLAYER) printf("o ");
+            else if (cell == END) printf("- ");
+            else if (cell == KEY) printf("K ");
+            else if (cell == BONUS) printf("X ");
+            else if (cell == PENALTY) printf("Y ");
+            else printf("  ");
+        }
+        printf("\n");
+    }
+}
+
 void menu() {
     int choice = 0;
 
@@ -188,14 +217,18 @@ void menu() {
         printf("----------------------Jeu du labyrinthe----------------------\n");
         printf("Vous êtes représenté par 'o'. Ramassez la clé (K) pour ouvrir la sortie (-).\n");
         printf("Un bonus (X) ajoute 1 point ; un malus (Y) retire 1 point.\n");
+        printf("Fantôme (F) : traverse les murs ; ogre (O) : reste dans son territoire.\n");
         printf("Vous pouvez vous déplacer en utilisant les touches 'z' (haut), 's' (bas), 'q' (gauche) et 'd' (droite).\n");
         printf("Bonne chance !\n\n");
 
         Point current_point = {game.labyrinth.points.start_line, game.labyrinth.points.start_col};
         Point end_point = {game.labyrinth.points.end_line, game.labyrinth.points.end_col};
+        Monster monsters[2];
+        srand((unsigned int)time(NULL));
+        int monster_count = place_monsters(&game.labyrinth, monsters, 2);
 
         while (current_point.line != end_point.line || current_point.col != end_point.col) {
-            display_labyrinth(game.labyrinth.dim, game.labyrinth.board);
+            display_game_labyrinth(game.labyrinth, monsters, monster_count);
             printf("Score (bonus(X)/malus(Y)): %d | Coups : %d | Clé (K): %s\n",
                    game.score, game.nb_moves, game.is_key_found ? "oui" : "non");
             printf("Entrez votre mouvement (z : haut, s : bas, q : gauche, d : droite) : ");
@@ -249,6 +282,26 @@ void menu() {
                 if (current_point.line != end_point.line ||
                     current_point.col != end_point.col) {
                     game.labyrinth.board[current_point.line][current_point.col] = PLAYER;
+                }
+
+                bool monster_hit[2] = {false};
+                for (int i = 0; i < monster_count; i++) {
+                    if (monsters[i].point.line == current_point.line &&
+                        monsters[i].point.col == current_point.col) {
+                        game.score -= monsters[i].penalty_points;
+                        monster_hit[i] = true;
+                        printf("Un monstre vous a touché : -%d points.\n",
+                               monsters[i].penalty_points);
+                    }
+                }
+                move_all_monsters(monsters, monster_count, &game.labyrinth);
+                for (int i = 0; i < monster_count; i++) {
+                    if (monsters[i].point.line == current_point.line &&
+                        monsters[i].point.col == current_point.col && !monster_hit[i]) {
+                        game.score -= monsters[i].penalty_points;
+                        printf("Un monstre vous a touché : -%d points.\n",
+                               monsters[i].penalty_points);
+                    }
                 }
             } else {
                 printf("Mouvement invalide. Vous ne pouvez pas vous déplacer dans cette direction.\n");
@@ -314,25 +367,48 @@ void set_name(char *name) {
 }
 
 
-void display_labyrinth(Dimensions dim, int ** labyrinth) {
+static void display_case(int cell) {
+    if (cell == WALL) {
+        printf("# ");
+    } else if (cell == PLAYER) {
+        printf("o ");
+    } else if (cell == END) {
+        printf("- ");
+    } else if (cell == KEY) {
+        printf("K ");
+    } else if (cell == BONUS) {
+        printf("X ");
+    } else if (cell == PENALTY) {
+        printf("Y ");
+    } else {
+        printf("  ");
+    }
+}
+
+void display_labyrinth(Dimensions dim, int **labyrinth) {
     for (int i = 0; i < dim.height; i++) {
         for (int j = 0; j < dim.width; j++) {
-            if (labyrinth[i][j] == WALL) {
-                printf("# "); 
-            } else if (labyrinth[i][j] == PLAYER) {
-                printf("o "); 
-            } else if (labyrinth[i][j] == END) {
-                printf("- "); 
-            } else if (labyrinth[i][j] == KEY) {
-                printf("K ");
-            } else if (labyrinth[i][j] == BONUS) {
-                printf("X ");
-            } else if (labyrinth[i][j] == PENALTY) {
-                printf("Y ");
+            display_case(labyrinth[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void display_labyrinth_with_monsters(Labyrinth labyrinth,
+                                     const Monster *monsters, int count) {
+    for (int row = 0; row < labyrinth.dim.height; row++) {
+        for (int col = 0; col < labyrinth.dim.width; col++) {
+            bool monster_found = false;
+            for (int i = 0; i < count; i++) {
+                if (monsters[i].point.line == row && monsters[i].point.col == col) {
+                    printf("%c ", monsters[i].type == GHOST ? 'F' : 'O');
+                    monster_found = true;
+                    break;
+                }
             }
-           else{
-            printf("  ");
-           }
+            if (!monster_found) {
+                display_case(labyrinth.board[row][col]);
+            }
         }
         printf("\n");
     }
