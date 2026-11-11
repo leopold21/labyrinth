@@ -1,8 +1,6 @@
 #include "labyrinth.h"
 
-int main(int argc, char *argv[]) {
-    (void)argc;
-    (void)argv;
+int main() {
     menu();
     return 0;
 }

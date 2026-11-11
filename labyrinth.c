@@ -265,6 +265,38 @@ void generate_path(Labyrinth labyrinth) {
     }
 }
 
+bool wall_is_broken(const Labyrinth *labyrinth, int row, int col) {
+    return labyrinth->board[row][col] == WALL &&
+           ((row % 2 == 0 && col % 2 == 1) || (row % 2 == 1 && col % 2 == 0));
+}
+
+int count_walls_breakable(Labyrinth *labyrinth) {
+    int count = 0;
+    for (int i = 1; i < labyrinth->dim.height - 1; i++) {
+        for (int j = 1; j < labyrinth->dim.width - 1; j++) {
+            if (wall_is_broken(labyrinth, i, j)) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+void remove_walls(Labyrinth *labyrinth) {
+    int total_walls_broken = count_walls_breakable(labyrinth);
+    int walls_to_remove = total_walls_broken / WALL_REMOVAL_DIVISOR;
+
+    while (walls_to_remove > 0) {
+        int row = 1 + rand() % (labyrinth->dim.height - 2);
+        int col = 1 + rand() % (labyrinth->dim.width - 2);
+
+        if (wall_is_broken(labyrinth, row, col)) {
+            labyrinth->board[row][col] = EMPTY;
+            walls_to_remove--;
+        }
+    }
+}
+
 Labyrinth* create_labyrinth(Dimensions dim) {
     srand(time(NULL)); 
 
@@ -281,6 +313,30 @@ Labyrinth* create_labyrinth(Dimensions dim) {
         return NULL;
     }
 
+    int level;
+    printf("Choisissez le niveau de difficulté du labyrinthe :\n");
+    printf("1. Facile\n");
+    printf("2. Difficile\n");
+
+    while (1) {
+        printf("Entrez votre choix (1 ou 2) : ");
+        if (scanf("%d", &level) != 1) {
+            if (feof(stdin)) {
+                free_labyrinth(*labyrinth);
+                free(labyrinth);
+                return NULL;
+            }
+            clear_buffer();
+            printf("Choix invalide. Veuillez entrer 1 pour Facile ou 2 pour Difficile.\n");
+            continue;
+        }
+        clear_buffer();
+        if (level == EASY || level == HARD) {
+            break;
+        } else {
+            printf("Choix invalide. Veuillez entrer 1 pour Facile ou 2 pour Difficile.\n");
+        }
+    }
     labyrinth->points.start_col = 1 + 2 * (rand() % ((dim.width - 1) / 2));
     labyrinth->points.end_col = 1 + 2 * (rand() % ((dim.width - 1) / 2));
     labyrinth->points.start_line = 0;
@@ -288,6 +344,9 @@ Labyrinth* create_labyrinth(Dimensions dim) {
 
     initialize_game(*labyrinth);
     generate_path(*labyrinth);
+    if (level == HARD) {
+        remove_walls(labyrinth);
+    }
 
     int available_cells = 0;
     for (int row = 0; row < dim.height; row++) {

@@ -14,7 +14,9 @@
 
 #define MAX_RANKING 10
 
+#define WALL_REMOVAL_DIVISOR 5
 
+// Enumeration
 enum cases {
     EMPTY = 0,
     WALL = -1,
@@ -23,6 +25,11 @@ enum cases {
     KEY = -4,
     BONUS = -5,
     PENALTY = -6
+};
+
+enum level {
+    EASY = 1,
+    HARD = 2
 };
 
 // Structures
