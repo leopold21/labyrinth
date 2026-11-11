@@ -356,9 +356,9 @@ void save_labyrinth(const char *fileName, const char *userName, Labyrinth *labyr
             } else if (cell == KEY) {
                 fputs("K", file);
             } else if (cell == BONUS) {
-                fputs("B", file);
+                fputs("X", file);
             } else if (cell == PENALTY) {
-                fputs("M", file);
+                fputs("Y", file);
             } else {
                 fputs(" ", file);
             }
@@ -454,6 +454,7 @@ int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
             } else if (line[col] == 'K') {
                 key_count++;
             } else if (line[col] != '#' && line[col] != ' ' &&
+                       line[col] != 'X' && line[col] != 'Y' &&
                        line[col] != 'B' && line[col] != 'M') {
                 valid = 0;
                 break;
@@ -512,9 +513,11 @@ int load_labyrinth(const char *fileName, Labyrinth *labyrinth) {
                     case 'K':
                         loaded.board[row][col] = KEY;
                         break;
+                    case 'X':
                     case 'B':
                         loaded.board[row][col] = BONUS;
                         break;
+                    case 'Y':
                     case 'M':
                         loaded.board[row][col] = PENALTY;
                         break;

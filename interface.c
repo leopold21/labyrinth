@@ -187,7 +187,7 @@ void menu() {
 
         printf("----------------------Jeu du labyrinthe----------------------\n");
         printf("Vous êtes représenté par 'o'. Ramassez la clé (K) pour ouvrir la sortie (-).\n");
-        printf("Un bonus (B) ajoute 1 point ; un malus (M) retire 1 point.\n");
+        printf("Un bonus (X) ajoute 1 point ; un malus (Y) retire 1 point.\n");
         printf("Vous pouvez vous déplacer en utilisant les touches 'z' (haut), 's' (bas), 'q' (gauche) et 'd' (droite).\n");
         printf("Bonne chance !\n\n");
 
@@ -196,7 +196,7 @@ void menu() {
 
         while (current_point.line != end_point.line || current_point.col != end_point.col) {
             display_labyrinth(game.labyrinth.dim, game.labyrinth.board);
-            printf("Score (bonus/malus): %d | Coups : %d | Clé : %s\n",
+            printf("Score (bonus(X)/malus(Y)): %d | Coups : %d | Clé (K): %s\n",
                    game.score, game.nb_moves, game.is_key_found ? "oui" : "non");
             printf("Entrez votre mouvement (z : haut, s : bas, q : gauche, d : droite) : ");
 
@@ -326,9 +326,9 @@ void display_labyrinth(Dimensions dim, int ** labyrinth) {
             } else if (labyrinth[i][j] == KEY) {
                 printf("K ");
             } else if (labyrinth[i][j] == BONUS) {
-                printf("B ");
+                printf("X ");
             } else if (labyrinth[i][j] == PENALTY) {
-                printf("M ");
+                printf("Y ");
             }
            else{
             printf("  ");
@@ -356,10 +356,10 @@ void display_found_case(Dimensions dim, int **l) {
                     printf("K ");
                     break;
                 case BONUS:
-                    printf("B ");
+                    printf("X ");
                     break;
                 case PENALTY:
-                    printf("M ");
+                    printf("Y ");
                     break;
                 case EMPTY:
                     printf("  ");
