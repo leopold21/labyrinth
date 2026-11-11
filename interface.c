@@ -276,9 +276,22 @@ void menu() {
 
         Point current_point = {game.labyrinth.points.start_line, game.labyrinth.points.start_col};
         Point end_point = {game.labyrinth.points.end_line, game.labyrinth.points.end_col};
-        Monster monsters[2];
+
+        int size = game.labyrinth.dim.height * game.labyrinth.dim.width;
+        int max_monsters = size / CELL_PER_MONSTER;
+        if (max_monsters < 1) {
+            max_monsters = 1;
+        }
+
+        Monster *monsters = malloc((size_t)max_monsters * sizeof(Monster));
+        if (monsters == NULL) {
+            perror("Erreur d'allocation pour les monstres");
+            free_labyrinth(game.labyrinth);
+            return;
+        }
+
         srand((unsigned int)time(NULL));
-        int monster_count = place_monsters(&game.labyrinth, monsters, 2);
+        int monster_count = place_monsters(&game.labyrinth, monsters, max_monsters);
 
         while (current_point.line != end_point.line || current_point.col != end_point.col) {
             display_game_labyrinth(game.labyrinth, monsters, monster_count);
@@ -290,6 +303,7 @@ void menu() {
             if (scanf(" %c", &move) != 1) {
                 printf("Entrée invalide. Veuillez entrer 'z', 's', 'q' ou 'd'.\n");
                 clear_buffer();
+                free(monsters);
                 free_labyrinth(game.labyrinth);
                 return;
             }
@@ -337,20 +351,11 @@ void menu() {
                     game.labyrinth.board[current_point.line][current_point.col] = PLAYER;
                 }
 
-                bool monster_hit[2] = {false};
+                move_all_monsters(monsters, monster_count, &game.labyrinth);
+
                 for (int i = 0; i < monster_count; i++) {
                     if (monsters[i].point.line == current_point.line &&
                         monsters[i].point.col == current_point.col) {
-                        game.score -= monsters[i].penalty_points;
-                        monster_hit[i] = true;
-                        printf("Un monstre vous a touché : -%d points.\n",
-                               monsters[i].penalty_points);
-                    }
-                }
-                move_all_monsters(monsters, monster_count, &game.labyrinth);
-                for (int i = 0; i < monster_count; i++) {
-                    if (monsters[i].point.line == current_point.line &&
-                        monsters[i].point.col == current_point.col && !monster_hit[i]) {
                         game.score -= monsters[i].penalty_points;
                         printf("Un monstre vous a touché : -%d points.\n",
                                monsters[i].penalty_points);
@@ -362,8 +367,9 @@ void menu() {
         }
 
         game.score += SCORE_FACTOR - (game.nb_moves * SCORE_PENALTY_MOVE);
-        printf("Bravo, vous avez trouvé la sortie en %d coup(s) ! Score final : %d\n",
-               game.nb_moves, game.score);
+        printf("Bravo, vous avez trouvé la sortie en %d coup(s) ! Score final : %d\n", game.nb_moves, game.score);
+
+        free(monsters);
 
         char playerName[100];
         if (!read_required_line("Entrez votre nom pour enregistrer votre score : ",
@@ -376,7 +382,6 @@ void menu() {
         display_ranking(fileName);
         free_labyrinth(game.labyrinth);
         menu();
-
     } else if (choice == 4) {
         printf("Merci d'avoir joué ! À bientôt !\n");
         return;

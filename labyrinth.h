@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define LABYRINTH_DIRECTORY "labyrinths"
-#define RANKING_DIRECTORY "ranking"
+#define LABYRINTH_DIRECTORY "The models labyrinths"
+#define RANKING_DIRECTORY "Ranking"
 
 #define SCORE_FACTOR 1000
 #define SCORE_PENALTY_MOVE 15
@@ -15,6 +15,7 @@
 #define MAX_RANKING 10
 
 #define WALL_REMOVAL_DIVISOR 5
+#define CELL_PER_MONSTER 40
 
 // Enumeration
 enum cases {
