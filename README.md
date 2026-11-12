@@ -31,7 +31,7 @@ Rejoindre la sortie en un minimum de coups, tout en maximisant son score grâce 
 ### Légende et éléments du jeu
 o : Le joueur.
 
-- : La sortie (l'arrivée).
+\- : La sortie (l'arrivée).
 
 K : La clé qui permet de sortir du labyrinthe.
 
