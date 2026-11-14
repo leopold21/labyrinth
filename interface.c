@@ -350,7 +350,7 @@ int play_labyrinth(Game *game, const char *fileName) {
     int monster_count = place_monsters(&game->labyrinth, monsters, max_monsters);
     while (current.line != end.line || current.col != end.col) {
         display_labyrinth_with_monsters(game->labyrinth, monsters, monster_count);
-        printf("Score (bonus(X)/malus(Y)): %d | Coups : %d | Clé (K): %s\n",
+        printf("Score (bonus(X)/malus(Y)/monstres(F/O)): %d | Coups : %d | Clé (K): %s\n",
                game->score, game->nb_moves, game->is_key_found ? "oui" : "non");
 
         Point next;
