@@ -276,6 +276,7 @@ static bool try_player_move(Game *game, Point *current, Point next,
 
     if (next_cell == KEY) {
         game->is_key_found = true;
+        printf("Bravo ! Vous avez récupéré la clé.\n");
     } else if (next_cell == BONUS) {
         game->score += SCORE_BONUS;
         printf("Bravo ! Vous avez récupéré un bonus : +%d points.\n",
