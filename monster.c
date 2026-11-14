@@ -183,7 +183,8 @@ int place_monsters(Labyrinth *labyrinth, Monster monsters[], int max_monsters) {
                 if (target-- == 0) {
                     Point point = {row, col};
                     enum type_monster type = placed == 0 ? GHOST : OGRE;
-                    monsters[placed] = create_monster(point, type, 3);
+                    monsters[placed] = create_monster(point, type,
+                                                      SCORE_MONSTER_PENALTY);
                     placed++;
                     row = labyrinth->dim.height;
                     break;

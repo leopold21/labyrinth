@@ -35,13 +35,13 @@ o : Le joueur.
 
 K : La clé qui permet de sortir du labyrinthe.
 
-X : Les bonus (augmentent le score).
+X : Les bonus (ajoutent 45 points au score).
 
-Y : Les malus (diminuent le score).
+Y : Les malus (retirent 20 points au score).
 
-F : Les fantômes (monstres mobiles capables de traverser les murs, qui font perdre des points au contact).
+F : Les fantômes (monstres mobiles capables de traverser les murs, qui font perdre 25 points au contact).
 
-O : Les ogres (monstres mobiles qui restent à proximiter du trésor, qui font perdre des points au contact).
+O : Les ogres (monstres mobiles qui restent à proximiter du trésor, qui font perdre 25 points au contact).
 
 Informations utiles au cours de la partie : Le scores des bonus, malus et monstres, le nombre de coups et si vous possédez la clé ou non sont affichés en permanence.
 

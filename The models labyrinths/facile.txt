@@ -1,9 +1,0 @@
-Le créateur du labyrinth est: mep
-
-#####o#
-#K#Y  #
-#Y### #
-#X X  #
-##### #
-#     #
-###-###

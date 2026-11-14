@@ -1,0 +1,11 @@
+Le créateur du labyrinth est: leopold
+
+#######o#
+#X  #   #
+# ### ###
+#     Y #
+#####X###
+# Y #X Y#
+### # ###
+# KX   Y#
+#######-#

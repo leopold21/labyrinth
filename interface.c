@@ -278,8 +278,12 @@ static bool try_player_move(Game *game, Point *current, Point next,
         game->is_key_found = true;
     } else if (next_cell == BONUS) {
         game->score += SCORE_BONUS;
+        printf("Bravo ! Vous avez récupéré un bonus : +%d points.\n",
+               SCORE_BONUS);
     } else if (next_cell == PENALTY) {
         game->score -= SCORE_PENALTY;
+        printf("Dommage, vous avez pris un malus : -%d points.\n",
+               SCORE_PENALTY);
     }
 
     game->nb_moves++;
@@ -295,8 +299,13 @@ static bool try_player_move(Game *game, Point *current, Point next,
         if (monsters[i].point.line == current->line &&
             monsters[i].point.col == current->col) {
             game->score -= monsters[i].penalty_points;
-            printf("Un monstre vous a touché : -%d points.\n",
-                   monsters[i].penalty_points);
+            if (monsters[i].type == GHOST) {
+                printf("Dommage, vous avez été touché par un fantôme : -%d points.\n",
+                       monsters[i].penalty_points);
+            } else {
+                printf("Dommage, vous avez été touché par un ogre : -%d points.\n",
+                       monsters[i].penalty_points);
+            }
         }
     }
     return true;
@@ -313,8 +322,11 @@ static bool try_player_move(Game *game, Point *current, Point next,
 int play_labyrinth(Game *game, const char *fileName) {
     printf("----------------------Jeu du labyrinthe----------------------\n");
     printf("Vous êtes représenté par 'o'. Ramassez la clé (K) pour ouvrir la sortie (-).\n");
-    printf("Un bonus (X) ajoute 1 point ; un malus (Y) retire 1 point.\n");
+    printf("Un bonus (X) ajoute %d points ; un malus (Y) retire %d points.\n",
+           SCORE_BONUS, SCORE_PENALTY);
     printf("Fantôme (F) : traverse les murs ; ogre (O) : reste dans son territoire.\n");
+    printf("Chaque contact avec un monstre fait perdre %d points.\n",
+           SCORE_MONSTER_PENALTY);
     printf("Vous pouvez vous déplacer en utilisant les touches 'z' (haut), 's' (bas), 'q' (gauche) et 'd' (droite).\n");
     printf("Bonne chance !\n\n");
 
