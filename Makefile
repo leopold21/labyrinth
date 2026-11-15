@@ -7,24 +7,24 @@ all: build/labyrinth
 build/labyrinth: build/main.o build/labyrinth.o build/interface.o build/memory.o build/monster.o 
 	$(CC) build/main.o build/labyrinth.o build/interface.o build/memory.o build/monster.o -o build/labyrinth
 
-build/main.o: src/main.c build/labyrinth.h
+build/main.o: src/main.c include/labyrinth.h
 	mkdir -p build
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/main.c -o build/main.o
 
-build/labyrinth.o: src/labyrinth.c build/labyrinth.h
+build/labyrinth.o: src/labyrinth.c include/labyrinth.h
 	mkdir -p build
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/labyrinth.c -o build/labyrinth.o
 
-build/interface.o: src/interface.c build/labyrinth.h 
+build/interface.o: src/interface.c include/labyrinth.h 
 	mkdir -p build
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/interface.c -o build/interface.o
 
 
-build/memory.o:  src/memory.c build/labyrinth.h 
+build/memory.o:  src/memory.c include/labyrinth.h 
 	mkdir -p build
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/memory.c -o build/memory.o
 
-build/monster.o: src/monster.c build/labyrinth.h
+build/monster.o: src/monster.c include/labyrinth.h
 	mkdir -p build
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/monster.c -o build/monster.o
 
