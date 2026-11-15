@@ -26,7 +26,7 @@ Pour générer un labyrinthe, l'utilisateur suit les étapes suivantes :
 L'utilisateur peut parcourir la liste des labyrinthes disponibles afin de les afficher à l'écran.
 
 
-### Objectif 
+###bu Objectif 
 Rejoindre la sortie en un minimum de coups, tout en maximisant son score grâce aux bonus et en évitant les malus et les monstres (fantômes et ofres). Pour franchir la sortie, le joueur doit impérativement récupérer la clé (un indicateur à l'écran précise si le joueur la possède ou non).
 
 ### Légende et éléments du jeu

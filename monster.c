@@ -1,7 +1,6 @@
-#include "labyrinth.h"
-
 #include <stdlib.h>
 
+#include "labyrinth.h"
 /**
  * @brief Computes neighboring cell coordinates based on a numerical direction index.
  * 
