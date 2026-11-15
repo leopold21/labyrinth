@@ -19,8 +19,7 @@ build/interface.o: src/interface.c include/labyrinth.h
 	mkdir -p build
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/interface.c -o build/interface.o
 
-
-build/memory.o:  src/memory.c include/labyrinth.h 
+build/memory.o: src/memory.c include/labyrinth.h 
 	mkdir -p build
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/memory.c -o build/memory.o
 
@@ -28,10 +27,18 @@ build/monster.o: src/monster.c include/labyrinth.h
 	mkdir -p build
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c src/monster.c -o build/monster.o
 
-.PHONY: all run clean
+build/tests/tests_labyrinth: tests/tests_labyrinth.c tests/minunit.h build/labyrinth.o build/interface.o build/memory.o build/monster.o
+	mkdir -p build/tests
+	$(CC) $(CPPFLAGS) $(CFLAGS) tests/tests_labyrinth.c build/labyrinth.o build/interface.o build/memory.o build/monster.o -o build/tests/tests_labyrinth
+
+.PHONY: all run test clean
 
 run: build/labyrinth
 	./build/labyrinth
 
+test: build/tests/tests_labyrinth
+	./build/tests/tests_labyrinth > build/tests/result_tests_labyrinth.txt
+	
+	
 clean: 
 	rm -rf build
