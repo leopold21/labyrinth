@@ -1,9 +1,0 @@
-Le créateur du labyrinth est: Alice
-
-#o#####
-# # # #
-#######
-# # # #
-#######
-# # # #
-#####-#
